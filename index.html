@@ -1,0 +1,620 @@
+﻿<!DOCTYPE html> 
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="js/Chart.js"></script>
+    <!--
+        <script type="text/javascript" src="js/jquery.tablesorter.js"></script>
+        <script type="text/javascript" src="js/jquery-latest.js"></script>
+    -->
+
+    <script type="text/javascript">
+        window.onload = function () {
+            document.body.style.margin = 0 + "px";
+            document.body.style.padding = 0 + "px";
+
+            meses = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sept", "Oct", "Nov", "Dic"];
+
+            contenedor = document.getElementById("tablaTiempo");
+            contenedor.style.position = "relative";
+            contenedor.style.top = 10 + "px";
+            contenedor.style.width = 95 + "%";
+            contenedor.style.height = 35 + "%";
+            contenedor.style.margin = 10 + "px auto";
+            
+            anchoPantalla = window.innerWidth;
+            altoPantalla = window.innerHeight;
+   
+            todosBotones = document.getElementsByTagName("button");
+            for (var i = 0; i < todosBotones.length; i++) {
+                todosBotones[i].addEventListener("click", controladorDeBotones);
+                claseBotonSinSeleccionar(todosBotones[i].id);
+            }
+            claseBotonSeleccionado("btAnterior");
+
+            contenedorGráficas = document.getElementById("contenedorGráficas");
+            contenedorGráficas.style.position = "relative";
+            contenedorGráficas.style.width = 95 + "%";
+            contenedorGráficas.style.height = 50 + "%";
+            contenedorGráficas.style.textAlign = "center";
+            contenedorGráficas.style.margin = 1 + "px auto";
+
+            botones = document.getElementById("contBotones");
+            botones.style.position = "relative";
+            botones.style.left = 10 + "%";
+            botones.style.top = 10 + "px";
+
+            control = document.getElementById("control");
+
+            cargando = document.getElementById("cargando");
+            cargando.style.position = "absolute";
+            cargando.style.width = 15 + "%";
+            cargando.style.height = 20 + "%";
+            cargando.style.left = 45 + "%";
+            cargando.style.top = 45 + "%";
+ 
+            mensajeError = document.getElementById("mensajeError");
+            mensajeError.style.position = "absolute";
+            mensajeError.style.marginLeft = 20 + "px";
+            mensajeError.style.display = "none";
+            mensajeError.style.color = "#ff0000";
+
+            reiniciarVariables();
+            arrayHumedad = new Array();
+            arrayTempAt = new Array();
+            arrayTempSuelo = new Array();
+            arrayRachasVientos = new Array();
+            arrayFechas = new Array();
+            contadorAux = -1;
+
+            seguir = true;
+            contador = 0;
+            contadorParticular = 0;
+            ultimoMes = 0;
+            ultimaHora = 0;
+            ultimoAño = 0;
+
+            visibilidadContenedores("hidden");
+            verOcultarBotones("hidden");
+            mostrar(contador, "paginación");
+
+            /*$(document).ready(function () {
+                $("#tablaTiempo").tablesorter();
+            });*/
+        }
+        function visibilidadContenedores(visibilidad) {
+            contenedor.style.visibility = visibilidad;
+            contenedorGráficas.style.visibility = visibilidad;
+        }
+        function queHaré(valor) {
+            switch (valor) {
+                case "6Horas":
+                    return seisHoras();
+                    break;
+                case "paginación":
+                    return paginar();
+                    break;
+                case "4Semanas":
+                    return cuatroSemanas();
+                    break;
+                case "24Horas":
+                    return venticuatroHoras();
+                    break;
+                case "6Meses":
+                    return seisMeses();
+                    break;
+                case "añosMedia":
+                    return añosMedia();
+                    break;
+            }
+        }
+        function claseBotonSinSeleccionar(id) {
+            var boton = document.getElementById(id);
+            boton.style.backgroundImage = 'linear-gradient(to bottom, #0099ff, #004875)';
+            boton.style.borderRadius = 13 + "px";
+            boton.style.boxShadow = '5px 4px 3px #666666';
+            boton.style.color = "#ffffff";
+            boton.style.fontFamily = "Arial";
+            boton.style.fontSize = 14 + "px";
+            boton.style.border = "solid #000203 1px";
+            boton.style.textDecoration = "none";
+            boton.style.padding = "5px 5px 5px 5px";
+            document.getElementById(id).removeAttribute('disabled');
+        }
+        function claseBotonSeleccionado(id) {
+            var boton = document.getElementById(id);
+            boton.style.backgroundImage = 'linear-gradient(to bottom, #d6eaff, #046db3)';
+            boton.style.borderRadius = 13 + "px";
+            boton.style.boxShadow = '5px 4px 3px #666666';
+            boton.style.color = "#000000";
+            boton.style.fontFamily = "Arial";
+            boton.style.fontSize = 14 + "px";
+            boton.style.border = "solid #8c8c8c 1px";
+            boton.style.textDecoration = "none";
+            boton.style.padding = "5px 5px 5px 5px";
+            boton.setAttribute('disabled', 'disabled');
+        }
+     
+        function controladorDeBotones(event) {
+            var evento = event || window.event;
+            seguir = true;
+            reiniciarValores();
+            contadorParticular = 0;
+            ultimaHora = 0;
+            ultimoMes = 0;
+            ultimoAño = 0;
+            cargando.style.visibility = "visible";
+
+            for (var i = 0; i < todosBotones.length; i++) {
+                claseBotonSinSeleccionar(todosBotones[i].id);
+
+            }
+            if (contador == 0) { claseBotonSeleccionado("btAnterior"); } else if (contador == 69) { claseBotonSeleccionado("btSiguiente"); }
+
+            switch (evento.target.id) {
+                case "btAnterior":
+                    eliminarTrTabla();
+                    verOcultarBotones("hidden");
+                    if (contador > 0) {
+                        cargando.style.visibility = "visible";
+                        contador--;
+                        claseBotonSinSeleccionar("btSiguiente");
+                        mostrar(contador, "paginación");
+                        if (contador == 0) {
+                            claseBotonSeleccionado("btAnterior");
+                        }
+                    } 
+                    break;
+                case "btSiguiente":
+                    eliminarTrTabla();
+                    verOcultarBotones("hidden");
+                    if (contador < 69) {
+                        cargando.style.visibility = "visible";
+                        contador++;
+                        mostrar(contador, "paginación");
+                        claseBotonSinSeleccionar("btAnterior");
+                        if (contador == 69) {
+                            claseBotonSeleccionado("btSiguiente");
+                        }
+                    }
+                    break;
+                case "seisHoras":
+                    eliminarTrTabla();
+                    claseBotonSeleccionado("seisHoras");
+                    verOcultarBotones("hidden");
+                    mostrar(0, "6Horas");
+                    break;
+
+                case "24Horas":
+                    eliminarTrTabla();
+                    claseBotonSeleccionado("24Horas");
+                    verOcultarBotones("hidden");
+                    mostrar(0, "24Horas");
+
+                    break;
+
+                case "4Semanas":
+                    eliminarTrTabla();
+                    claseBotonSeleccionado("4Semanas");
+                    verOcultarBotones("hidden");
+                    mostrar(contadorParticular, "4Semanas");
+
+                    break;
+                case "6Meses":
+                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
+                    if (r == true) {
+                        eliminarTrTabla();
+                        claseBotonSeleccionado("6Meses");
+                        verOcultarBotones("hidden");
+                        mostrar(contadorParticular, "6Meses");
+                    } else {
+                        cargando.style.visibility = "hidden";
+                        verOcultarBotones("visible");
+                    }
+                    break;
+                case "años":
+                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
+                    if (r == true) {
+                        eliminarTrTabla();
+                        claseBotonSeleccionado("años");
+                        verOcultarBotones("hidden");
+                        mostrar(contadorParticular, "añosMedia");
+                    } else {
+                        cargando.style.visibility = "hidden";
+                        verOcultarBotones("visible");
+                    }
+                    break;
+            }
+
+        }
+        function verOcultarBotones(visibilidad) {
+            botones.style.visibility = visibilidad;
+            control.style.visibility = visibilidad;
+        }
+        function mostrar(pagina,condicion) {
+            if (window.XMLHttpRequest) {peticion_htpp = new XMLHttpRequest();} else if (window.ActiveXObject) { peticion_http = new ActiveXObject("Microsoft.XMLHTTP");}
+            peticion_htpp.onreadystatechange = muestraContenido;
+            peticion_htpp.open("GET", prepararURL(pagina), true);
+            peticion_htpp.send(null);
+            final = false;
+
+            function muestraContenido() {
+                if (peticion_htpp.readyState == 4 && peticion_htpp.status == 200) {
+                    //CASO JSON
+                    visibilidadContenedores("visible");
+                    var respuesta_json = peticion_htpp.responseText;
+                    objeto_json = eval("(" + respuesta_json + ")");
+
+                    for (var i = 0; i < objeto_json.items.length && seguir; i++) {
+                        var tr = document.createElement("tr");
+                        valor = i;
+                        valor++;
+                        crearTD((500 * contadorParticular)+ valor, tr, "#005ae2", "white");
+                        if (i % 2 == 0) {
+                            color = "white";
+                        } else {
+                            color = "#f2f2f2";
+                        }
+                        if (pagina == 0) {
+                            ultimaHora = sacarHora(objeto_json.items[0].reading_timestamp).substring(0, 5);
+                            ultimoMes = sacarMes(objeto_json.items[0].reading_timestamp.substring(5, 7));
+                            ultimoAño = objeto_json.items[0].reading_timestamp.substring(0, 4);
+                        }
+                        
+                        fecha = sacarFecha(objeto_json.items[i].reading_timestamp);
+                        hora = sacarHora(objeto_json.items[i].reading_timestamp);
+                        mesActual = sacarMes(objeto_json.items[i].reading_timestamp.substring(5, 7));
+                        añoActual = objeto_json.items[i].reading_timestamp.substring(0, 4);
+                        crearTD(fecha + " * " + hora, tr, color, "black");
+                        crearTD(objeto_json.items[i].ambient_temp, tr, color, "black");
+                        crearTD(objeto_json.items[i].ground_temp, tr, color, "black");
+                        crearTD(objeto_json.items[i].air_pressure, tr, color, "black");
+                        crearTD(objeto_json.items[i].humidity, tr, color, "black");
+                        crearTD(objeto_json.items[i].wind_direction, tr, color, "black");
+                        crearTD(objeto_json.items[i].wind_speed, tr, color, "black");
+                        crearTD(objeto_json.items[i].rainfall, tr, color, "black");
+                        document.getElementById("contenidoTabla").appendChild(tr);
+                        if (i == objeto_json.items.length - 1) {
+                            final = true;
+                        }
+                        tratamiento(queHaré(condicion), objeto_json.items[i].humidity, objeto_json.items[i].wind_speed, objeto_json.items[i].ambient_temp, objeto_json.items[i].ground_temp);
+                    }
+                    contenedorGráficas.style.position = "relative";
+
+                    if (seguir) {
+                        contadorParticular++;
+                        mostrar(contadorParticular, condicion);
+                    } else {
+                        eliminarGráfica("barrasHumedad");
+                        eliminarGráfica("barrasViento");
+                        eliminarGráfica("lineas");
+
+                        verOcultarBotones("visible");
+                        cargando.style.visibility = "hidden";
+
+                        pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad);
+                        pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
+                        pintarGráficaLineal(arrayFechas, arrayTempAt, arrayTempSuelo);
+                    }
+                   
+                } else {
+                    /*
+                    mensajeError.style.display = "block";
+                    visibilidad("hidden");
+                    cargando.style.visibility = "hidden";
+                    */
+                }
+                
+            } 
+
+        }
+        function seisMeses() {
+            if (ultimoMes == mesActual && arrayFechas.length == 0) {
+                arrayFechas.push(mesActual);
+                return true;
+            } else if (arrayFechas.indexOf(mesActual) == -1 && arrayFechas.length < 7) {
+                arrayFechas.push(mesActual);
+                if (arrayFechas.length == 7) {
+                    arrayFechas.pop();
+                    seguir = false;
+                }
+                return false;
+            } 
+            else {
+                return true;
+            }
+        }
+        function añosMedia() {
+            if (ultimoAño == añoActual && arrayFechas.length == 0) {
+                arrayFechas.push(añoActual);
+                return true;
+            }else if(arrayFechas.indexOf(añoActual) == -1){
+                arrayFechas.push(añoActual);
+                return false;
+            } else if (contadorParticular == 69 && final) {
+                seguir = false;
+                return false;
+            } else {
+                return true;
+            }
+        }
+        
+        function eliminarGráfica(id) {
+            document.getElementById(id).parentNode.removeChild(document.getElementById(id));
+        }
+        function crearGráfica(padre,id,width,heigth) {
+            var canvas = document.createElement("canvas");
+            canvas.setAttribute("id", id);
+            canvas.setAttribute("width", width);
+            canvas.setAttribute("height", heigth);
+            document.getElementById(padre).appendChild(canvas);
+            return canvas.getContext("2d");
+        }
+
+        function tratamiento(booleano, valorHumedad, valorVelocidadViento, valorTempAt, valorTempSuelo) {
+            //2018-02-06T21:30:02Z
+            if (booleano) {
+                frecuencia++;
+                humedad += valorHumedad;
+                tempAt += valorTempAt;
+                tempSuelo += valorTempSuelo;
+                velocidadViento += valorVelocidadViento;
+            } else { 
+                arrayHumedad.push((humedad / frecuencia).toFixed(2));
+                arrayTempAt.push((tempAt / frecuencia).toFixed(2));
+                arrayTempSuelo.push((tempSuelo / frecuencia).toFixed(2));
+                arrayRachasVientos.push((velocidadViento / frecuencia).toFixed(2));
+
+                reiniciarVariables();
+            }
+        }
+        function reiniciarVariables() {
+            humedad = 0;
+            velocidadViento = 0;
+            tempAt = 0;
+            tempSuelo = 0;
+            frecuencia = 0;
+        }
+        function paginar() {
+            if (arrayFechas.length == 0) {
+                arrayFechas.push(fecha);
+            }else if (arrayFechas.indexOf(fecha) != -1 && !final) {
+                return true;
+            } else if (!final && arrayFechas.indexOf(fecha) == -1) {
+                arrayFechas.push(fecha);
+                return false;
+            } else if (final) {
+                seguir = false;
+                return false;
+            }
+            return true;
+        }
+        function seisHoras() {
+            var minutoActual = hora.substring(3, 5);
+            if (sacarHora(objeto_json.items[0].reading_timestamp).substring(3, 5) == minutoActual && contadorAux >= 0) {
+                contadorAux++;
+                arrayFechas.push(contadorAux + "h");
+                if (contadorAux == 6) {
+                    seguir = false;
+                }
+                return false;
+            } else if (contadorAux == -1) {//Si es el primer elemento
+                contadorAux++;
+                return true;
+            } else if(final){
+                return false;
+            } else {
+                return true;
+            }
+        }
+        function venticuatroHoras() {
+            var minutoActual = hora.substring(3, 5);
+            if (sacarHora(objeto_json.items[0].reading_timestamp).substring(3, 5) == minutoActual) {
+                contadorAux++;
+                if (contadorAux % 6 == 0 && contadorAux != 0) {
+                    arrayFechas.push(contadorAux + "h");
+                    if(arrayFechas.length == 4){
+                        seguir = false;
+                    }
+                    return false;
+                }
+                return true;
+            } else {
+                return true;
+            }
+        }
+        function cuatroSemanas() {
+            var horaActual = hora.substring(0, 5);
+            if (ultimaHora == horaActual) {
+                contadorAux++;
+                if (contadorAux % 7 == 0 && contadorAux != 0) {
+                    arrayFechas.push((contadorAux / 7) + "S");
+                    if (arrayFechas.length == 4) {
+                        seguir = false;
+                    }
+                    return false;
+                }
+                return true;
+            } else {
+                return true;
+            }
+        }
+
+        function sacarFecha(valor) {
+            var dia = valor.substring(8, 10);
+            var mes = sacarMes(valor.substring(5, 7));
+            var año = valor.substring(0, 4);
+            return dia + "/" + mes + "/" + año;
+        }
+        function sacarHora(valor) {
+            //2018-02-06T21:30:02Z
+            return valor.substring(11, 19);
+        }
+
+        function sacarMes(mes) {
+            pos = 1;
+            if (mes.substring(0, 1) == 0) {
+                pos = mes.substring(1, 2);
+            } else {
+                pos = mes;
+            }
+            return meses[pos];
+        }
+        function reiniciarValores() {
+            arrayHumedad = new Array();
+            arrayTempAt = new Array();
+            arrayTempSuelo = new Array();
+            arrayRachasVientos = new Array();
+            arrayFechas = new Array();
+            contadorAux = -1;
+        }
+        function crearTD(valor, tr,colorFondo,colorLetra) {
+            var td = document.createElement("td");
+            td.style.textAlign = "center";
+            var texto = document.createTextNode(valor);
+            td.appendChild(texto);
+            td.style.backgroundColor = colorFondo;
+            td.style.color = colorLetra;
+            tr.appendChild(td);
+        }
+        function eliminarTrTabla() {
+            tablaTiempo = document.getElementById("contenidoTabla");
+            arrayTrs = tablaTiempo.getElementsByTagName("tr");
+            for (var i = arrayTrs.length - 1; i >= 0; i--) {
+                tablaTiempo.removeChild(arrayTrs[i])
+            }
+        }
+        function prepararURL(valor){
+            var url = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720";
+            if(valor > 0){
+                url = url.concat("?page=" + valor);
+            }
+            return url;
+        }
+        function pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad) {
+            var barChartData = {
+                labels: arrayFechas,
+                datasets: [
+                    {
+                        fillColor: "#6b9dfa",
+                        strokeColor: "#ffffff",
+                        highlightFill: "#1864f2",
+                        highlightStroke: "#ffffff",
+                        data: arrayHumedad
+                    },
+                    
+                ]
+            }
+            window.myBar = new Chart(crearGráfica("contBarrasHumedad","barrasHumedad", 400, 300)).Bar(barChartData);
+        }
+        function pintarGráficaBarrasViento(arrayFechas, arrayVelocidadVientos) {
+            var barChartData = {
+                labels: arrayFechas,
+                datasets: [
+                    {
+                        fillColor: "#bf80ff",
+                        strokeColor: "#ffffff",
+                        highlightFill: "#7300e6",
+                        highlightStroke: "#ffffff",
+                        data: arrayRachasVientos
+                    },
+
+                ]
+            }
+            window.myBar = new Chart(crearGráfica("contBarrasVientos", "barrasViento", 400, 300)).Bar(barChartData);
+
+        }
+        function pintarGráficaLineal(arrayFechas, arrayTempAt, arrayTempSue) {
+            var lineChartData = {
+                labels: arrayFechas,
+                datasets: [
+                    {
+                        label: "Temp Atmosférica",
+                        fillColor: "rgba(220,220,220,0.2)",//Fondo gris 
+                        strokeColor: "#6b9dfa",//Color de la linea 
+                        pointColor: "#1e45d7",//Color de puntos
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(220,220,220,1)",
+                        data: arrayTempAt
+                    },
+                    {
+                        label: "Temp Suelo",
+                        fillColor: "rgba(151,187,205,0.2)",
+                        strokeColor: "#a04d20",
+                        pointColor: "#c65353",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(151,187,205,1)",
+                        data: arrayTempSue
+                    }
+                ]
+            }
+            window.myLine = new Chart(crearGráfica("contLineas","lineas",450,250)).Line(lineChartData);
+        }
+
+    </script>
+
+</head>
+<body>
+    <h1 id="mensajeError">Estamos teniendo problemas con el servidor. Lo sentimos!!!</h1>
+    <table id="contenedorGráficas">
+        <tr>
+            <td colspan="3"><h1 id="titulo">Estadística del TIEMPO</h1></td>
+        </tr>
+        <tr>
+            <td colspan="3"><div id="control">
+                 <span>CONTROL: </span>
+                 <button id="seisHoras">6 HORAS</button>
+                 <button id="24Horas">24 HORAS</button>
+                 <button id="4Semanas">4 SEMANAS</button>
+                 <button id="6Meses"> 6 MESES</button>
+                 <button id="años">AÑOS</button>
+            </div></td>
+        </tr>
+        <tr>
+            <th><h2>Velocidad de Vientos (km/h)</h2></th>
+            <th><h2>Temperaturas (°C)</h2></th>
+            <th><h2>Humedad (%)</h2></th>
+        </tr>
+        <tr>
+            <td id="contBarrasVientos"><canvas id="barrasViento"></canvas></td>
+            <td id="contLineas"><canvas id="lineas"></canvas></td>
+            <td id="contBarrasHumedad"><canvas id="barrasHumedad"></canvas></td>
+        </tr>
+        <tr>
+            <td colspan="3"><div>
+                <div style="margin-right:20px; color:white; background:#6b9dfa; display:inline; padding:5px 5px 5px 5px">Temperatura Atmosférica</div> 
+                <div style="color:white; background:#a04d20; display:inline; padding:5px 5px 5px 5px">Temperatura del Suelo</div>
+                </div></td>
+        </tr>
+    </table> 
+    <div id="contBotones">
+        <button id="btAnterior" disabled="disabled"> Anterior</button>
+        <button id="btSiguiente">Siguiente</button>
+    </div>
+  
+    <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
+        <thead> 
+            <tr style="background-color:#005ae2;color:white">
+                <th>Pos</th>
+                <th>Fecha/Hora</th>
+                <th>Temperatura Atmósferica</th>
+                <th>Temperatura del Suelo</th>
+                <th>Presión Atmosférica</th>
+                <th>Humedad</th>
+                <th>Dirección del Viento</th>
+                <th>Velocidad del Viento</th>
+                <th>LLuvia</th>
+            </tr>
+       </thead>
+        <tbody id="contenidoTabla">
+
+        </tbody>
+    </table>
+
+    <img id="cargando" src="imagen/cargando.gif" />
+</body>
+</html>
