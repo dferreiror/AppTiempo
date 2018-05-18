@@ -1,93 +1,147 @@
-﻿<!DOCTYPE html> 
+<!DOCTYPE html> 
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>AppTiempo</title>
     <script src="js/Chart.js"></script>
-    <!--
-        <script type="text/javascript" src="js/jquery.tablesorter.js"></script>
-        <script type="text/javascript" src="js/jquery-latest.js"></script>
-    -->
 
+    <script type="text/javascript" src="./js/jquery-latest.js"></script>
+    <script type="text/javascript" src="./js/jquery.tablesorter.js"></script>
+    <style>
+        th.header { 
+            background-image: url(./imagen/bg.gif); 
+            cursor: pointer; 
+            font-weight: bold; 
+            background-repeat: no-repeat; 
+            background-position: center left; 
+            padding-left: 20px; 
+            border-right: 1px solid #dad9c7; 
+            margin-left: -1px; 
+        } 
+        th.headerSortDown { 
+            background-image: url(./imagen/desc.gif); 
+            background-color: red; 
+        } 
+        th.headerSortUp { 
+            background-image: url(./imagen/asc.gif); 
+            background-color: #3399FF; 
+        } 
+  </style>
     <script type="text/javascript">
         window.onload = function () {
+            /*Regla del (0.0)*/
             document.body.style.margin = 0 + "px";
             document.body.style.padding = 0 + "px";
-
+            /*Capturar los elementos por el id*/
+            numPágina = document.getElementById("numPágina");
+            spanTotalPágina = document.getElementById("spanTotalPágina");
+            control = document.getElementById("control");
+            todosBotones = document.getElementsByTagName("button");
+            contenedorGráficas = document.getElementById("contenedorGráficas");
+            cargando = document.getElementById("cargando");
+            mensajeError = document.getElementById("mensajeError");
+            inputNumber = document.getElementById("campoNumérico");
+            cabecera = document.getElementById("cabecera");
+            /*Array de meses*/
             meses = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sept", "Oct", "Nov", "Dic"];
 
-            contenedor = document.getElementById("tablaTiempo");
-            contenedor.style.position = "relative";
-            contenedor.style.top = 10 + "px";
-            contenedor.style.width = 95 + "%";
-            contenedor.style.height = 35 + "%";
-            contenedor.style.margin = 10 + "px auto";
+            /*Estilos del divContenedor*/
+            tablaTiempo = document.getElementById("tablaTiempo");
+            tablaTiempo.style.position = "relative";
+            tablaTiempo.style.top = 10 + "px";
+            tablaTiempo.style.width = 95 + "%";
+            tablaTiempo.style.height = 35 + "%";
+            tablaTiempo.style.margin = 10 + "px auto";
             
-            anchoPantalla = window.innerWidth;
-            altoPantalla = window.innerHeight;
-   
-            todosBotones = document.getElementsByTagName("button");
+            /*Se le da el onclick a todos los botones y se le da estilos*/
             for (var i = 0; i < todosBotones.length; i++) {
                 todosBotones[i].addEventListener("click", controladorDeBotones);
                 claseBotonSinSeleccionar(todosBotones[i].id);
             }
             claseBotonSeleccionado("btAnterior");
+            claseBotonSeleccionado("btRetroceder5");
 
-            contenedorGráficas = document.getElementById("contenedorGráficas");
+            /*Estilos de tabla contenedora de las gráficas*/
             contenedorGráficas.style.position = "relative";
             contenedorGráficas.style.width = 95 + "%";
             contenedorGráficas.style.height = 50 + "%";
             contenedorGráficas.style.textAlign = "center";
             contenedorGráficas.style.margin = 1 + "px auto";
 
-            botones = document.getElementById("contBotones");
-            botones.style.position = "relative";
-            botones.style.left = 10 + "%";
-            botones.style.top = 10 + "px";
+            /*Div contenedor de los botones de la paginación*/
+            contPag = document.getElementById("contenedorPaginacion");
+            contPag.style.position = "relative";
+            contPag.style.left = 10 + "%";
+            contPag.style.top = 10 + "px";
 
-            control = document.getElementById("control");
-
-            cargando = document.getElementById("cargando");
+            /*GIF cargando*/
             cargando.style.position = "absolute";
             cargando.style.width = 15 + "%";
             cargando.style.height = 20 + "%";
             cargando.style.left = 45 + "%";
             cargando.style.top = 45 + "%";
  
-            mensajeError = document.getElementById("mensajeError");
+            /*Mensaje de error que se activa cuando no ha habido un problema*/
             mensajeError.style.position = "absolute";
             mensajeError.style.marginLeft = 20 + "px";
             mensajeError.style.display = "none";
             mensajeError.style.color = "#ff0000";
 
+            /*Barra de progreso que se activa cuando se clickea en el botón 4semanas,6meses o años*/
+            contbarraProgreso = document.getElementById("contbarraProgreso");
+            contbarraProgreso.style.position = "absolute";
+            contbarraProgreso.style.left = 32 + "%";
+            contbarraProgreso.style.width = 40 + "%";
+            contbarraProgreso.style.height = 10 + "%";
+            contbarraProgreso.style.top = 25 + "%";
+            contbarraProgreso.style.visibility = "hidden";
+            barraProgreso = document.getElementById("barraProgreso");
+            barraProgreso.style.width = 80 + "%";
+            barraProgreso.style.height = 30 + "%";
+
             reiniciarVariables();
             arrayHumedad = new Array();
             arrayTempAt = new Array();
-            arrayTempSuelo = new Array();
             arrayRachasVientos = new Array();
             arrayFechas = new Array();
-            contadorAux = -1;
 
+            /*Inicialización de variables y booleanos*/
+            contadorAux = -1;
             seguir = true;
+            cancelar = false;
             contador = 0;
             contadorParticular = 0;
             ultimoMes = 0;
             ultimaHora = 0;
             ultimoAño = 0;
+            totalPáginas = 88;
+			numPágina.innerHTML = 1;
+
+            /*Valor máximo que permitirá el inputNumber será el número de páginas del JSON*/
+            inputNumber.setAttribute("max", totalPáginas);
+            inputNumber.style.width = "3%";
+            inputNumber.setAttribute("value",1);
 
             visibilidadContenedores("hidden");
             verOcultarBotones("hidden");
             mostrar(contador, "paginación");
-
-            /*$(document).ready(function () {
-                $("#tablaTiempo").tablesorter();
-            });*/
+            spanTotalPágina.innerHTML = " / " + totalPáginas;
+            setTimeout(function(){ordenarTabla()}, 5000);
         }
+        function ordenarTabla(){
+            $(document).ready(function() 
+            { 
+                 $("#tablaTiempo").tablesorter( {sortList: [[0,0]]} ); 
+            });
+        }
+        /*Este método recibe como parámetros la visibidad (hidden o visible)*/
         function visibilidadContenedores(visibilidad) {
-            contenedor.style.visibility = visibilidad;
+            tablaTiempo.style.visibility = visibilidad;
             contenedorGráficas.style.visibility = visibilidad;
         }
+
+        /*Identifica que botón que botón se ha clicado y ejecuta su método correspondiente*/
         function queHaré(valor) {
             switch (valor) {
                 case "6Horas":
@@ -110,6 +164,7 @@
                     break;
             }
         }
+        /*Método que da estilo y comportamiento a los botones que no se encuentran seleccionados*/
         function claseBotonSinSeleccionar(id) {
             var boton = document.getElementById(id);
             boton.style.backgroundImage = 'linear-gradient(to bottom, #0099ff, #004875)';
@@ -123,6 +178,7 @@
             boton.style.padding = "5px 5px 5px 5px";
             document.getElementById(id).removeAttribute('disabled');
         }
+        /*Método que cambia el estilo y comportamiento del botón que ha sido seleccionado*/
         function claseBotonSeleccionado(id) {
             var boton = document.getElementById(id);
             boton.style.backgroundImage = 'linear-gradient(to bottom, #d6eaff, #046db3)';
@@ -136,180 +192,343 @@
             boton.style.padding = "5px 5px 5px 5px";
             boton.setAttribute('disabled', 'disabled');
         }
-     
+
         function controladorDeBotones(event) {
             var evento = event || window.event;
-            seguir = true;
+            
+            /*Reinicio de variables*/
             reiniciarValores();
+            seguir = true;
+            cancelar = false;
             contadorParticular = 0;
             ultimaHora = 0;
             ultimoMes = 0;
             ultimoAño = 0;
             cargando.style.visibility = "visible";
-
-            for (var i = 0; i < todosBotones.length; i++) {
-                claseBotonSinSeleccionar(todosBotones[i].id);
-
-            }
-            if (contador == 0) { claseBotonSeleccionado("btAnterior"); } else if (contador == 69) { claseBotonSeleccionado("btSiguiente"); }
-
+			
+			actualizarBotonesPaginacion();
+            /*Los botones se ocultan para que se puede clicar ninguno mientras se cargan los datos*/
+			verOcultarBotones("hidden");
+			
             switch (evento.target.id) {
-                case "btAnterior":
-                    eliminarTrTabla();
-                    verOcultarBotones("hidden");
-                    if (contador > 0) {
-                        cargando.style.visibility = "visible";
-                        contador--;
-                        claseBotonSinSeleccionar("btSiguiente");
+                case "Enviar":
+                    if(validacionInputNumerico()){/*Si el valor del inputNumber es correcto.*/ 
+						eliminarTrTabla();
+                        contador = (parseInt(inputNumber.value) - 1);
                         mostrar(contador, "paginación");
-                        if (contador == 0) {
-                            claseBotonSeleccionado("btAnterior");
-                        }
-                    } 
-                    break;
-                case "btSiguiente":
-                    eliminarTrTabla();
-                    verOcultarBotones("hidden");
-                    if (contador < 69) {
-                        cargando.style.visibility = "visible";
-                        contador++;
-                        mostrar(contador, "paginación");
-                        claseBotonSinSeleccionar("btAnterior");
-                        if (contador == 69) {
-                            claseBotonSeleccionado("btSiguiente");
-                        }
+                        actualizarBotonesPaginacion();
+                        cabecera.style.visibility = "hidden";
                     }
                     break;
+
+                case "4Semanas":
+                    claseBotonSeleccionado("4Semanas");
+                    mostrar(contadorParticular, "4Semanas");
+                    eliminarTrTabla();
+                    cabecera.style.visibility = "hidden";
+                    break;
+
+                case "6Meses":
+                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
+                    if (r == true) { /*Aceptar*/
+                        eliminarTrTabla();
+                        cabecera.style.visibility = "hidden";
+                        claseBotonSeleccionado("6Meses");
+                        mostrar(contadorParticular, "6Meses");
+                    } else {/*Cancelar*/
+                        cargando.style.visibility = "hidden";
+                        verOcultarBotones("visible");
+                    }
+                    break;
+
+                case "años":
+                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
+                    if (r == true) {/*Aceptar*/
+                        claseBotonSeleccionado("años");
+                        eliminarTrTabla();
+                        cabecera.style.visibility = "hidden";
+                        mostrar(contadorParticular, "añosMedia");
+                    } else {/*Cancelar*/
+                        cargando.style.visibility = "hidden";
+                        verOcultarBotones("visible");
+                    }
+                    break; 
+
+                /*Si se cancela el proceso, se cambiar el boolean a true para que pare de leer*/      
+                case "Cancelar":
+                    cancelar = true;
+                    break;
+
+                case "btAnterior": 
+                    eliminarTrTabla();
+                    contador--;
+                    cabecera.style.visibility = "hidden";
+                    mostrar(contador, "paginación");
+                    actualizarBotonesPaginacion();
+                    break;
+
+                case "btSiguiente":
+                    eliminarTrTabla();
+                    contador++;
+                    cabecera.style.visibility = "hidden";
+                    mostrar(contador, "paginación");
+                    actualizarBotonesPaginacion();
+                    break;
+
+                case "btRetroceder5":
+                    eliminarTrTabla();
+                    contador = contador - 5;
+                    cabecera.style.visibility = "hidden";
+                    mostrar(contador, "paginación");
+                    actualizarBotonesPaginacion();
+                    break;
+
+                case "btAvanzar5":
+                    eliminarTrTabla();
+                    cabecera.style.visibility = "hidden";
+                    contador = contador + 5;
+                    mostrar(contador, "paginación");
+                    actualizarBotonesPaginacion();
+                    break;
+
                 case "seisHoras":
                     eliminarTrTabla();
+                    cabecera.style.visibility = "hidden";
                     claseBotonSeleccionado("seisHoras");
-                    verOcultarBotones("hidden");
                     mostrar(0, "6Horas");
                     break;
 
                 case "24Horas":
                     eliminarTrTabla();
+                    cabecera.style.visibility = "hidden";
                     claseBotonSeleccionado("24Horas");
-                    verOcultarBotones("hidden");
                     mostrar(0, "24Horas");
-
-                    break;
-
-                case "4Semanas":
-                    eliminarTrTabla();
-                    claseBotonSeleccionado("4Semanas");
-                    verOcultarBotones("hidden");
-                    mostrar(contadorParticular, "4Semanas");
-
-                    break;
-                case "6Meses":
-                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
-                    if (r == true) {
-                        eliminarTrTabla();
-                        claseBotonSeleccionado("6Meses");
-                        verOcultarBotones("hidden");
-                        mostrar(contadorParticular, "6Meses");
-                    } else {
-                        cargando.style.visibility = "hidden";
-                        verOcultarBotones("visible");
-                    }
-                    break;
-                case "años":
-                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
-                    if (r == true) {
-                        eliminarTrTabla();
-                        claseBotonSeleccionado("años");
-                        verOcultarBotones("hidden");
-                        mostrar(contadorParticular, "añosMedia");
-                    } else {
-                        cargando.style.visibility = "hidden";
-                        verOcultarBotones("visible");
-                    }
                     break;
             }
-
+            /*Puede que el valor de la página haya sufrido alguna modificación por eso se actualiza*/
+			numPágina.innerHTML = "";
+			aux = contador;
+            numPágina.innerHTML = (parseInt(aux)+1);
         }
+        /*Ambos contenedores de botones se hacen hidden mientras se van cargando los datos y una vez finalizado el proceso se vuelven a mostrar*/
         function verOcultarBotones(visibilidad) {
-            botones.style.visibility = visibilidad;
+            contPag.style.visibility = visibilidad;
             control.style.visibility = visibilidad;
         }
-        function mostrar(pagina,condicion) {
-            if (window.XMLHttpRequest) {peticion_htpp = new XMLHttpRequest();} else if (window.ActiveXObject) { peticion_http = new ActiveXObject("Microsoft.XMLHTTP");}
+		/*Si se clica en el botón enviar, se leer el valor que tiene el inputNumber y se actualiza el valor del contador
+        y con ello el estado de los botones de la paginación. */
+		function actualizarBotonesPaginacion(){
+			for (var i = 0; i < todosBotones.length; i++) {
+                claseBotonSinSeleccionar(todosBotones[i].id);
+            }
+            if (contador == 0) {
+                claseBotonSeleccionado("btAnterior");
+            }
+            if (contador == (totalPáginas - 1)) {
+                claseBotonSeleccionado("btSiguiente");
+            }
+            if((contador - 5) < 0) {
+                claseBotonSeleccionado("btRetroceder5");
+            }
+            if ((contador + 5) > totalPáginas) {
+                claseBotonSeleccionado("btAvanzar5");
+            }
+		}
+		
+        function validacionInputNumerico() {
+            if(inputNumber.value >= 1 && inputNumber.value <= totalPáginas){/*Se encuenta en el rango correcto*/
+                return true;
+            }
+            /*Si el valor no es correcto*/
+            verOcultarBotones("visible");
+            cargando.style.visibility = "hidden";
+            return false;
+        }
+        /*Método principal*/
+        function mostrar(pagina, condicion) {
+            if (window.XMLHttpRequest) { peticion_htpp = new XMLHttpRequest(); } else if (window.ActiveXObject) { peticion_http = new ActiveXObject("Microsoft.XMLHTTP"); }
             peticion_htpp.onreadystatechange = muestraContenido;
             peticion_htpp.open("GET", prepararURL(pagina), true);
             peticion_htpp.send(null);
-            final = false;
+            final = false;/*booleano que cambia a true cuando llega al final de la página*/
+
+            /*Si la condición es una de las siguiente se activa la barra de progreso para orientar al usuario de como va el proceso.*/
+            if (condicion == "4Semanas" || condicion == "6Meses" || condicion == "añosMedia") {
+                contbarraProgreso.style.visibility = "visible";
+            }
 
             function muestraContenido() {
                 if (peticion_htpp.readyState == 4 && peticion_htpp.status == 200) {
                     //CASO JSON
                     visibilidadContenedores("visible");
+                    mensajeError.style.display = "none";
+
+                    /*Se captura el json y se parsea para que pueda ser leido*/
                     var respuesta_json = peticion_htpp.responseText;
                     objeto_json = eval("(" + respuesta_json + ")");
 
-                    for (var i = 0; i < objeto_json.items.length && seguir; i++) {
-                        var tr = document.createElement("tr");
-                        valor = i;
-                        valor++;
-                        crearTD((500 * contadorParticular)+ valor, tr, "#005ae2", "white");
-                        if (i % 2 == 0) {
-                            color = "white";
-                        } else {
-                            color = "#f2f2f2";
+                    for (var i = 0; i < objeto_json.items.length && seguir; i++) {/*Seguirá hasta que acabe la página o que ya no se quiera seguir*/
+                        fecha = sacarFecha(objeto_json.items[i].reading_timestamp);
+                        hora = sacarHora(objeto_json.items[i].reading_timestamp);
+
+                        /*Se escoge el mes y año vigente*/
+                        mesActual = sacarMes(objeto_json.items[i].reading_timestamp.substring(5, 7));
+                        añoActual = objeto_json.items[i].reading_timestamp.substring(0, 4);
+                        if (i <= 4) {/*Solo se quieren sacar por cada página los 5 primeros valores.*/
+                            var tr = document.createElement("tr");
+                            valor = i;
+                            valor++;
+                            /*Esta valor está preparado por si se lee más de una página (5 * contadorParticular) + valor) */
+                            crearTD((5 * contadorParticular) + valor, tr, "#005ae2", "white");
+                            if (i % 2 == 0) {
+                                color = "white";
+                            } else {
+                                color = "#f2f2f2";
+                            }
+
+                            crearTD(sacarDíaSemana(objeto_json.items[i].reading_timestamp.substring(0, 10)) + " " + fecha + " * " + hora, tr, color, "black");
+                            crearTD(objeto_json.items[i].ambient_temp, tr, color, "black");
+                            crearTD(objeto_json.items[i].air_pressure, tr, color, "black");
+                            crearTD(objeto_json.items[i].humidity, tr, color, "black");
+
+                            /*Se crea el div que contiene la brújula y la dirección del viente en grados*/
+                            divDirViento = document.createElement("div");
+                            valorGrados = document.createElement("span");
+                            textSpan = document.createTextNode(objeto_json.items[i].wind_direction);
+                            valorGrados.appendChild(textSpan);
+                            seleccionarBrújula(objeto_json.items[i].wind_direction);
+                            divDirViento.appendChild(seleccionarBrújula());
+                            divDirViento.appendChild(valorGrados);
+                            crearTD(divDirViento, tr, color, "black");
+
+                            crearTD(objeto_json.items[i].wind_speed, tr, color, "black");
+                            crearTD(objeto_json.items[i].rainfall, tr, color, "black");
+
+                            /*Se añaden los anteriores TD a la tabla*/
+                            document.getElementById("contenidoTabla").appendChild(tr);
                         }
-                        if (pagina == 0) {
+
+                        /*Me quedo con la última hora, el mes y el año*/
+                        if (pagina == 0 && i == 0) {
                             ultimaHora = sacarHora(objeto_json.items[0].reading_timestamp).substring(0, 5);
                             ultimoMes = sacarMes(objeto_json.items[0].reading_timestamp.substring(5, 7));
                             ultimoAño = objeto_json.items[0].reading_timestamp.substring(0, 4);
                         }
-                        
-                        fecha = sacarFecha(objeto_json.items[i].reading_timestamp);
-                        hora = sacarHora(objeto_json.items[i].reading_timestamp);
-                        mesActual = sacarMes(objeto_json.items[i].reading_timestamp.substring(5, 7));
-                        añoActual = objeto_json.items[i].reading_timestamp.substring(0, 4);
-                        crearTD(fecha + " * " + hora, tr, color, "black");
-                        crearTD(objeto_json.items[i].ambient_temp, tr, color, "black");
-                        crearTD(objeto_json.items[i].ground_temp, tr, color, "black");
-                        crearTD(objeto_json.items[i].air_pressure, tr, color, "black");
-                        crearTD(objeto_json.items[i].humidity, tr, color, "black");
-                        crearTD(objeto_json.items[i].wind_direction, tr, color, "black");
-                        crearTD(objeto_json.items[i].wind_speed, tr, color, "black");
-                        crearTD(objeto_json.items[i].rainfall, tr, color, "black");
-                        document.getElementById("contenidoTabla").appendChild(tr);
+
+                        /*booleano que cambia a true cuando es último elemento de la página*/
                         if (i == objeto_json.items.length - 1) {
                             final = true;
                         }
-                        tratamiento(queHaré(condicion), objeto_json.items[i].humidity, objeto_json.items[i].wind_speed, objeto_json.items[i].ambient_temp, objeto_json.items[i].ground_temp);
+                        tratamiento(queHaré(condicion), objeto_json.items[i].humidity, objeto_json.items[i].wind_speed, objeto_json.items[i].ambient_temp);
                     }
                     contenedorGráficas.style.position = "relative";
 
-                    if (seguir) {
-                        contadorParticular++;
-                        mostrar(contadorParticular, condicion);
-                    } else {
-                        eliminarGráfica("barrasHumedad");
-                        eliminarGráfica("barrasViento");
-                        eliminarGráfica("lineas");
-
+                    if (cancelar) {/*Si se le da a cancelar*/
+                        contbarraProgreso.style.visibility = "hidden";
+                        barraProgreso.value = 0;/*Se lleva a 0 a la barra de progreso*/
                         verOcultarBotones("visible");
                         cargando.style.visibility = "hidden";
-
-                        pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad);
-                        pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
-                        pintarGráficaLineal(arrayFechas, arrayTempAt, arrayTempSuelo);
+                        actualizarTableSorter();
+                        cabecera.style.visibility = "visible";
+                        seguir = false;/*rompe el bucle for*/
                     }
-                   
-                } else {
-                    /*
-                    mensajeError.style.display = "block";
-                    visibilidad("hidden");
-                    cargando.style.visibility = "hidden";
-                    */
-                }
-                
-            } 
+                    if (seguir) { /*Si seguir es true y a terminado de leer esa página llamará nuevamente el método mostrar*/
+                        contadorParticular++;
+                        barraProgreso.value = (contadorParticular * progreso(condicion));
+                        mostrar(contadorParticular, condicion);
+                    }
 
+                } else{
+                    /*mensajeError.style.display = "block";
+                    visibilidadContenedores("hidden");
+                    cargando.style.visibility = "hidden";*/
+                }
+                /*Si no se ha dado cancelar y ha terminado de consultar los datos de acuerdo a la condición que ha entrado en el método mostrar*/ 
+                if (!cancelar && !seguir) {
+                    /*Elimina las gráficas*/
+                    eliminarGráfica("barrasHumedad");
+                    eliminarGráfica("barrasViento");
+                    eliminarGráfica("lineas");
+
+                    verOcultarBotones("visible");
+                    cargando.style.visibility = "hidden";
+                    barraProgreso.value = 0;
+                    contbarraProgreso.style.visibility = "hidden";
+
+                    /*Se vuelven a crear las gráficas pasándole el array de datos correspondiente*/
+                    pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad);
+                    pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
+                    pintarGráficaLineal(arrayFechas, arrayTempAt);
+
+                    actualizarTableSorter();
+                    cabecera.style.visibility = "visible";
+                }
+            }
         }
+        function actualizarTableSorter() {
+            $("#tablaTiempo").trigger("update");
+            // set sorting column and direction, this will sort on the first and third column 
+            var sorting = [[0, 0], [0, 0]];
+            // sort on the first column 
+            $("#table").trigger("sorton", [sorting]);
+        }
+        // La fecha se encuenta en este formato 2018-11-28
+        function sacarDíaSemana(tiempo) {
+            var arrayDias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+            var procesarF = tiempo.split("-");
+            var date = new Date(procesarF[0] + " " + procesarF[1] + " " + procesarF[2]);
+            return arrayDias[date.getDay()];
+        }
+
+        function seleccionarBrújula(grados) {
+            brujulaImg = document.createElement("img");
+            brujulaImg.setAttribute("width", 100);
+            brujulaImg.setAttribute("heigth", 100);
+
+            /*Se establece un rango para escoger la imagen indicada*/
+            if(grados >= 0 && grados < 45){//NORTE
+                brujulaImg.setAttribute("src", "imagen/brujulaN.png");
+            }else if(grados >= 45 && grados < 90){//NORTESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaNE.png");
+            }
+            else if(grados >= 90 && grados < 135){//ESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaE.png");
+            }
+            else if(grados >= 135 && grados < 180){//SURESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaSE.png");
+            }
+            else if(grados >= 180 && grados < 225){//SUR
+                brujulaImg.setAttribute("src", "imagen/brujulaS.png");
+            }
+            else if(grados >= 225 && grados < 270){//SUROESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaSO.png");
+            }
+            else if(grados >= 270 && grados < 315){//OESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaO.png");
+            }
+            else{//NOROESTE
+                brujulaImg.setAttribute("src", "imagen/brujulaNO.png");
+            }
+            return brujulaImg;
+        }
+
+        function cuatroSemanas() {
+            var horaActual = hora.substring(0, 5);
+            if (ultimaHora == horaActual) {
+                contadorAux++;
+                if (contadorAux % 7 == 0 && contadorAux != 0) {
+                    arrayFechas.push((contadorAux / 7) + "S");
+                    if (arrayFechas.length == 4) {
+                        seguir = false;
+                    }
+                    return false;
+                }
+                return true;
+            } else {
+                return true;
+            }
+        }
+
         function seisMeses() {
             if (ultimoMes == mesActual && arrayFechas.length == 0) {
                 arrayFechas.push(mesActual);
@@ -326,6 +545,7 @@
                 return true;
             }
         }
+
         function añosMedia() {
             if (ultimoAño == añoActual && arrayFechas.length == 0) {
                 arrayFechas.push(añoActual);
@@ -333,7 +553,7 @@
             }else if(arrayFechas.indexOf(añoActual) == -1){
                 arrayFechas.push(añoActual);
                 return false;
-            } else if (contadorParticular == 69 && final) {
+            } else if (contadorParticular == totalPáginas && final) {
                 seguir = false;
                 return false;
             } else {
@@ -344,6 +564,7 @@
         function eliminarGráfica(id) {
             document.getElementById(id).parentNode.removeChild(document.getElementById(id));
         }
+
         function crearGráfica(padre,id,width,heigth) {
             var canvas = document.createElement("canvas");
             canvas.setAttribute("id", id);
@@ -353,30 +574,28 @@
             return canvas.getContext("2d");
         }
 
-        function tratamiento(booleano, valorHumedad, valorVelocidadViento, valorTempAt, valorTempSuelo) {
-            //2018-02-06T21:30:02Z
+        function tratamiento(booleano, valorHumedad, valorVelocidadViento, valorTempAt) {    
             if (booleano) {
-                frecuencia++;
+                frecuencia++;//Cuenta la cantidad de elementos
                 humedad += valorHumedad;
                 tempAt += valorTempAt;
-                tempSuelo += valorTempSuelo;
                 velocidadViento += valorVelocidadViento;
             } else { 
+                /*Introduce el valor, con solo dos cifras significativas luego de la coma, a el array correspondiente*/
                 arrayHumedad.push((humedad / frecuencia).toFixed(2));
                 arrayTempAt.push((tempAt / frecuencia).toFixed(2));
-                arrayTempSuelo.push((tempSuelo / frecuencia).toFixed(2));
                 arrayRachasVientos.push((velocidadViento / frecuencia).toFixed(2));
-
                 reiniciarVariables();
             }
         }
+
         function reiniciarVariables() {
             humedad = 0;
             velocidadViento = 0;
             tempAt = 0;
-            tempSuelo = 0;
             frecuencia = 0;
         }
+
         function paginar() {
             if (arrayFechas.length == 0) {
                 arrayFechas.push(fecha);
@@ -391,6 +610,7 @@
             }
             return true;
         }
+
         function seisHoras() {
             var minutoActual = hora.substring(3, 5);
             if (sacarHora(objeto_json.items[0].reading_timestamp).substring(3, 5) == minutoActual && contadorAux >= 0) {
@@ -425,23 +645,8 @@
                 return true;
             }
         }
-        function cuatroSemanas() {
-            var horaActual = hora.substring(0, 5);
-            if (ultimaHora == horaActual) {
-                contadorAux++;
-                if (contadorAux % 7 == 0 && contadorAux != 0) {
-                    arrayFechas.push((contadorAux / 7) + "S");
-                    if (arrayFechas.length == 4) {
-                        seguir = false;
-                    }
-                    return false;
-                }
-                return true;
-            } else {
-                return true;
-            }
-        }
 
+        /*Se le da el formato deseado*/
         function sacarFecha(valor) {
             var dia = valor.substring(8, 10);
             var mes = sacarMes(valor.substring(5, 7));
@@ -450,35 +655,54 @@
         }
         function sacarHora(valor) {
             //2018-02-06T21:30:02Z
-            return valor.substring(11, 19);
+            return valor.substring(11, 16);
         }
 
         function sacarMes(mes) {
-            pos = 1;
-            if (mes.substring(0, 1) == 0) {
-                pos = mes.substring(1, 2);
-            } else {
-                pos = mes;
-            }
-            return meses[pos];
+            return meses[parseInt(mes)];
         }
+
         function reiniciarValores() {
             arrayHumedad = new Array();
             arrayTempAt = new Array();
-            arrayTempSuelo = new Array();
             arrayRachasVientos = new Array();
             arrayFechas = new Array();
             contadorAux = -1;
         }
+
+        /*Cada condición tiene su propio avance*/
+        function progreso(condicion){
+            switch (condicion) {
+                case "4Semanas":
+                    return (100 / 9);
+                    break;
+                case "6Meses":
+                    return (100 / 34);
+                    break;
+                case "añosMedia":
+                    return(100 / totalPáginas);
+                    break;
+            }
+        }
+
         function crearTD(valor, tr,colorFondo,colorLetra) {
             var td = document.createElement("td");
             td.style.textAlign = "center";
-            var texto = document.createTextNode(valor);
-            td.appendChild(texto);
+            td.style.fontSize = 20 + "px";
+           
+           /*Caso especial: si es el div contenedor de la brújula y los grados del viento*/
+            if (valor == "[object HTMLDivElement]") {
+                td.appendChild(valor);
+            } else {
+                var texto = document.createTextNode(valor);
+                td.appendChild(texto);
+            }
             td.style.backgroundColor = colorFondo;
             td.style.color = colorLetra;
             tr.appendChild(td);
         }
+
+        /*Elimina los tr de la tabla para insertar los nuevos valores*/
         function eliminarTrTabla() {
             tablaTiempo = document.getElementById("contenidoTabla");
             arrayTrs = tablaTiempo.getElementsByTagName("tr");
@@ -486,6 +710,8 @@
                 tablaTiempo.removeChild(arrayTrs[i])
             }
         }
+
+        /*El valor que recibe el método es el contador*/
         function prepararURL(valor){
             var url = "https://apex.oracle.com/pls/apex/raspberrypi/weatherstation/getallmeasurements/2339720";
             if(valor > 0){
@@ -493,6 +719,7 @@
             }
             return url;
         }
+
         function pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad) {
             var barChartData = {
                 labels: arrayFechas,
@@ -514,9 +741,9 @@
                 labels: arrayFechas,
                 datasets: [
                     {
-                        fillColor: "#bf80ff",
+                        fillColor: "#1864f2",
                         strokeColor: "#ffffff",
-                        highlightFill: "#7300e6",
+                        highlightFill: "#6b9dfa",
                         highlightStroke: "#ffffff",
                         data: arrayRachasVientos
                     },
@@ -524,14 +751,13 @@
                 ]
             }
             window.myBar = new Chart(crearGráfica("contBarrasVientos", "barrasViento", 400, 300)).Bar(barChartData);
-
         }
-        function pintarGráficaLineal(arrayFechas, arrayTempAt, arrayTempSue) {
+
+        function pintarGráficaLineal(arrayFechas, arrayTempAt) {
             var lineChartData = {
                 labels: arrayFechas,
                 datasets: [
                     {
-                        label: "Temp Atmosférica",
                         fillColor: "rgba(220,220,220,0.2)",//Fondo gris 
                         strokeColor: "#6b9dfa",//Color de la linea 
                         pointColor: "#1e45d7",//Color de puntos
@@ -539,24 +765,12 @@
                         pointHighlightFill: "#fff",
                         pointHighlightStroke: "rgba(220,220,220,1)",
                         data: arrayTempAt
-                    },
-                    {
-                        label: "Temp Suelo",
-                        fillColor: "rgba(151,187,205,0.2)",
-                        strokeColor: "#a04d20",
-                        pointColor: "#c65353",
-                        pointStrokeColor: "#fff",
-                        pointHighlightFill: "#fff",
-                        pointHighlightStroke: "rgba(151,187,205,1)",
-                        data: arrayTempSue
                     }
                 ]
             }
             window.myLine = new Chart(crearGráfica("contLineas","lineas",450,250)).Line(lineChartData);
         }
-
     </script>
-
 </head>
 <body>
     <h1 id="mensajeError">Estamos teniendo problemas con el servidor. Lo sentimos!!!</h1>
@@ -575,8 +789,8 @@
             </div></td>
         </tr>
         <tr>
-            <th><h2>Velocidad de Vientos (km/h)</h2></th>
-            <th><h2>Temperaturas (°C)</h2></th>
+            <th><h2>Velocidad del Viento (km/h)</h2></th>
+            <th><h2>Temperatura (°C)</h2></th>
             <th><h2>Humedad (%)</h2></th>
         </tr>
         <tr>
@@ -584,37 +798,42 @@
             <td id="contLineas"><canvas id="lineas"></canvas></td>
             <td id="contBarrasHumedad"><canvas id="barrasHumedad"></canvas></td>
         </tr>
-        <tr>
-            <td colspan="3"><div>
-                <div style="margin-right:20px; color:white; background:#6b9dfa; display:inline; padding:5px 5px 5px 5px">Temperatura Atmosférica</div> 
-                <div style="color:white; background:#a04d20; display:inline; padding:5px 5px 5px 5px">Temperatura del Suelo</div>
-                </div></td>
-        </tr>
     </table> 
-    <div id="contBotones">
+    <div id="contenedorPaginacion">
+        <button id="btRetroceder5" disabled="disabled">Retroceder5</button>
         <button id="btAnterior" disabled="disabled"> Anterior</button>
         <button id="btSiguiente">Siguiente</button>
+        <button id="btAvanzar5">Avanzar5</button>
+        <span style="position:relative;left:2%;font-weight:bold;"> Página: <span id="numPágina"></span> <span id="spanTotalPágina"></span></span>
+        <div style="display:inline;position:relative;left:50px">
+            <span>Escoja la página: </span>
+            <input type="number" id="campoNumérico" min="1" required minlength="1" maxlength="2" validate />
+            <button id="Enviar">Enviar</button>
+        </div>
+        
     </div>
   
     <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
-        <thead> 
-            <tr style="background-color:#005ae2;color:white">
+        <thead > 
+            <tr id="cabecera" style="background-color:#005ae2;color:white">
                 <th>Pos</th>
-                <th>Fecha/Hora</th>
-                <th>Temperatura Atmósferica</th>
-                <th>Temperatura del Suelo</th>
-                <th>Presión Atmosférica</th>
+                <th>Fecha*Hora</th>
+                <th>Temp At</th>
+                <th>Pre. At</th>
                 <th>Humedad</th>
-                <th>Dirección del Viento</th>
-                <th>Velocidad del Viento</th>
-                <th>LLuvia</th>
+                <th>Dir. Viento</th>
+                <th>Vel. Viento</th>
+                <th>Lluvia</th>
             </tr>
        </thead>
-        <tbody id="contenidoTabla">
-
-        </tbody>
+        <tbody id="contenidoTabla"></tbody>
     </table>
 
     <img id="cargando" src="imagen/cargando.gif" />
+
+    <div id="contbarraProgreso">
+        <progress id="barraProgreso" value="0" max="100"></progress>
+        <button id="Cancelar">Cancelar</button>
+    </div>
 </body>
 </html>
