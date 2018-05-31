@@ -43,16 +43,20 @@
             mensajeError = document.getElementById("mensajeError");
             inputNumber = document.getElementById("campoNumérico");
             cabecera = document.getElementById("cabecera");
+            tablaTiempo = document.getElementById("tablaTiempo");
+            tablaTiempo.style.width = 100 + "%";
+            tablaTiempo.style.height = 100 + "%";
+
             /*Array de meses*/
             meses = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sept", "Oct", "Nov", "Dic"];
 
             /*Estilos del divContenedor*/
-            tablaTiempo = document.getElementById("tablaTiempo");
-            tablaTiempo.style.position = "relative";
-            tablaTiempo.style.top = 10 + "px";
-            tablaTiempo.style.width = 95 + "%";
-            tablaTiempo.style.height = 35 + "%";
-            tablaTiempo.style.margin = 10 + "px auto";
+            contentTablaTiempo = document.getElementById("contentTablaTiempo");
+            contentTablaTiempo.style.width = 95 + "%";
+            contentTablaTiempo.style.height = 35 + "%";
+            contentTablaTiempo.style.position = "relative";
+            contentTablaTiempo.style.top = 10 + "px";
+            contentTablaTiempo.style.margin = 10 + "px auto";
             
             /*Se le da el onclick a todos los botones y se le da estilos*/
             for (var i = 0; i < todosBotones.length; i++) {
@@ -115,7 +119,7 @@
             ultimoMes = 0;
             ultimaHora = 0;
             ultimoAño = 0;
-            totalPáginas = 88;
+            totalPáginas = 94; 
 			numPágina.innerHTML = 1;
 
             /*Valor máximo que permitirá el inputNumber será el número de páginas del JSON*/
@@ -141,29 +145,6 @@
             contenedorGráficas.style.visibility = visibilidad;
         }
 
-        /*Identifica que botón que botón se ha clicado y ejecuta su método correspondiente*/
-        function queHaré(valor) {
-            switch (valor) {
-                case "6Horas":
-                    return seisHoras();
-                    break;
-                case "paginación":
-                    return paginar();
-                    break;
-                case "4Semanas":
-                    return cuatroSemanas();
-                    break;
-                case "24Horas":
-                    return venticuatroHoras();
-                    break;
-                case "6Meses":
-                    return seisMeses();
-                    break;
-                case "añosMedia":
-                    return añosMedia();
-                    break;
-            }
-        }
         /*Método que da estilo y comportamiento a los botones que no se encuentran seleccionados*/
         function claseBotonSinSeleccionar(id) {
             var boton = document.getElementById(id);
@@ -195,7 +176,6 @@
 
         function controladorDeBotones(event) {
             var evento = event || window.event;
-            
             /*Reinicio de variables*/
             reiniciarValores();
             seguir = true;
@@ -213,41 +193,37 @@
             switch (evento.target.id) {
                 case "Enviar":
                     if(validacionInputNumerico()){/*Si el valor del inputNumber es correcto.*/ 
-						eliminarTrTabla();
                         contador = (parseInt(inputNumber.value) - 1);
-                        mostrar(contador, "paginación");
-                        actualizarBotonesPaginacion();
-                        cabecera.style.visibility = "hidden";
+                        intruccionBoton(contador,"Enviar");
                     }
                     break;
 
+                case "24Horas":
+                    intruccionBoton(0,"24Horas");
+                    break;
+                    
+                case "6Horas":
+                    intruccionBoton(0,"6Horas");
+                    break; 
+
                 case "4Semanas":
-                    claseBotonSeleccionado("4Semanas");
-                    mostrar(contadorParticular, "4Semanas");
-                    eliminarTrTabla();
-                    cabecera.style.visibility = "hidden";
+                    intruccionBoton(contadorParticular,"4Semanas");
                     break;
 
                 case "6Meses":
                     var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
                     if (r == true) { /*Aceptar*/
-                        eliminarTrTabla();
-                        cabecera.style.visibility = "hidden";
-                        claseBotonSeleccionado("6Meses");
-                        mostrar(contadorParticular, "6Meses");
+                         intruccionBoton(contadorParticular,"6Meses");
                     } else {/*Cancelar*/
                         cargando.style.visibility = "hidden";
                         verOcultarBotones("visible");
                     }
                     break;
 
-                case "años":
+                case "anos":
                     var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
                     if (r == true) {/*Aceptar*/
-                        claseBotonSeleccionado("años");
-                        eliminarTrTabla();
-                        cabecera.style.visibility = "hidden";
-                        mostrar(contadorParticular, "añosMedia");
+                        intruccionBoton(contadorParticular,"anos");
                     } else {/*Cancelar*/
                         cargando.style.visibility = "hidden";
                         verOcultarBotones("visible");
@@ -260,50 +236,24 @@
                     break;
 
                 case "btAnterior": 
-                    eliminarTrTabla();
                     contador--;
-                    cabecera.style.visibility = "hidden";
-                    mostrar(contador, "paginación");
-                    actualizarBotonesPaginacion();
+                    intruccionBoton(contador,"btAnterior");
                     break;
 
                 case "btSiguiente":
-                    eliminarTrTabla();
                     contador++;
-                    cabecera.style.visibility = "hidden";
-                    mostrar(contador, "paginación");
-                    actualizarBotonesPaginacion();
+                    intruccionBoton(contador,"btSiguiente");
                     break;
 
                 case "btRetroceder5":
-                    eliminarTrTabla();
                     contador = contador - 5;
-                    cabecera.style.visibility = "hidden";
-                    mostrar(contador, "paginación");
-                    actualizarBotonesPaginacion();
+                    intruccionBoton(contador,"btRetroceder5");
                     break;
 
                 case "btAvanzar5":
-                    eliminarTrTabla();
-                    cabecera.style.visibility = "hidden";
                     contador = contador + 5;
-                    mostrar(contador, "paginación");
-                    actualizarBotonesPaginacion();
-                    break;
-
-                case "seisHoras":
-                    eliminarTrTabla();
-                    cabecera.style.visibility = "hidden";
-                    claseBotonSeleccionado("seisHoras");
-                    mostrar(0, "6Horas");
-                    break;
-
-                case "24Horas":
-                    eliminarTrTabla();
-                    cabecera.style.visibility = "hidden";
-                    claseBotonSeleccionado("24Horas");
-                    mostrar(0, "24Horas");
-                    break;
+                    intruccionBoton(contador,"btAvanzar5");
+                    break; 
             }
             /*Puede que el valor de la página haya sufrido alguna modificación por eso se actualiza*/
 			numPágina.innerHTML = "";
@@ -314,6 +264,17 @@
         function verOcultarBotones(visibilidad) {
             contPag.style.visibility = visibilidad;
             control.style.visibility = visibilidad;
+        }
+        function intruccionBoton(pagina,boton){
+            eliminarTrTabla();
+            actualizarBotonesPaginacion();
+            if(boton == "btAnterior" || boton == "btSiguiente" || boton == "btRetroceder5" || boton == "btAvanzar5" || boton == "Enviar"){
+                mostrar(contador, "paginación");
+            }else{
+                mostrar(contadorParticular, boton);
+                claseBotonSeleccionado(boton);
+            }
+            cabecera.style.visibility = "hidden";
         }
 		/*Si se clica en el botón enviar, se leer el valor que tiene el inputNumber y se actualiza el valor del contador
         y con ello el estado de los botones de la paginación. */
@@ -330,7 +291,7 @@
             if((contador - 5) < 0) {
                 claseBotonSeleccionado("btRetroceder5");
             }
-            if ((contador + 5) > totalPáginas) {
+            if ((contador + 5) >= totalPáginas) {
                 claseBotonSeleccionado("btAvanzar5");
             }
 		}
@@ -353,7 +314,7 @@
             final = false;/*booleano que cambia a true cuando llega al final de la página*/
 
             /*Si la condición es una de las siguiente se activa la barra de progreso para orientar al usuario de como va el proceso.*/
-            if (condicion == "4Semanas" || condicion == "6Meses" || condicion == "añosMedia") {
+            if (condicion == "4Semanas" || condicion == "6Meses" || condicion == "anos") {
                 contbarraProgreso.style.visibility = "visible";
             }
 
@@ -409,7 +370,7 @@
                         }
 
                         /*Me quedo con la última hora, el mes y el año*/
-                        if (pagina == 0 && i == 0) {
+                        if (pagina == 0) {
                             ultimaHora = sacarHora(objeto_json.items[0].reading_timestamp).substring(0, 5);
                             ultimoMes = sacarMes(objeto_json.items[0].reading_timestamp.substring(5, 7));
                             ultimoAño = objeto_json.items[0].reading_timestamp.substring(0, 4);
@@ -465,6 +426,30 @@
                 }
             }
         }
+         /*Identifica que botón se ha clicado y ejecuta su método correspondiente*/
+        function queHaré(valor) {
+            switch (valor) {
+                case "6Horas":
+                    return seisHoras();
+                    break;
+                case "paginación":
+                    return paginar();
+                    break;
+                case "4Semanas":
+                    return cuatroSemanas();
+                    break;
+                case "24Horas":
+                    return venticuatroHoras();
+                    break;
+                case "6Meses":
+                    return seisMeses();
+                    break;
+                case "anos":
+                    return anos();
+                    break;
+            }
+        }
+
         function actualizarTableSorter() {
             $("#tablaTiempo").trigger("update");
             // set sorting column and direction, this will sort on the first and third column 
@@ -546,7 +531,7 @@
             }
         }
 
-        function añosMedia() {
+        function anos() {
             if (ultimoAño == añoActual && arrayFechas.length == 0) {
                 arrayFechas.push(añoActual);
                 return true;
@@ -597,7 +582,7 @@
         }
 
         function paginar() {
-            if (arrayFechas.length == 0) {
+            if (arrayFechas.length == 0) {/*Caso de que el array esté vacio se coloca la primera fecha de la página*/
                 arrayFechas.push(fecha);
             }else if (arrayFechas.indexOf(fecha) != -1 && !final) {
                 return true;
@@ -679,7 +664,7 @@
                 case "6Meses":
                     return (100 / 34);
                     break;
-                case "añosMedia":
+                case "anos":
                     return(100 / totalPáginas);
                     break;
             }
@@ -781,11 +766,11 @@
         <tr>
             <td colspan="3"><div id="control">
                  <span>CONTROL: </span>
-                 <button id="seisHoras">6 HORAS</button>
+                 <button id="6Horas">6 HORAS</button>
                  <button id="24Horas">24 HORAS</button>
                  <button id="4Semanas">4 SEMANAS</button>
                  <button id="6Meses"> 6 MESES</button>
-                 <button id="años">AÑOS</button>
+                 <button id="anos">AÑOS</button>
             </div></td>
         </tr>
         <tr>
@@ -812,22 +797,24 @@
         </div>
         
     </div>
-  
-    <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
-        <thead > 
-            <tr id="cabecera" style="background-color:#005ae2;color:white">
-                <th>Pos</th>
-                <th>Fecha*Hora</th>
-                <th>Temp At</th>
-                <th>Pre. At</th>
-                <th>Humedad</th>
-                <th>Dir. Viento</th>
-                <th>Vel. Viento</th>
-                <th>Lluvia</th>
-            </tr>
-       </thead>
-        <tbody id="contenidoTabla"></tbody>
-    </table>
+    <div id="contentTablaTiempo">
+        <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
+            <thead>
+                <tr id="cabecera" style="background-color:#005ae2;color:white">
+                    <th>Pos</th>
+                    <th>Fecha*Hora</th>
+                    <th>Temp At</th>
+                    <th>Pre. At</th>
+                    <th>Humedad</th>
+                    <th>Dir. Viento</th>
+                    <th>Vel. Viento</th>
+                    <th>Lluvia</th>
+                </tr>
+            </thead>
+            <tbody id="contenidoTabla"></tbody>
+        </table>
+    </div>
+    
 
     <img id="cargando" src="imagen/cargando.gif" />
 
@@ -837,3 +824,4 @@
     </div>
 </body>
 </html>
+
