@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+﻿<!DOCTYPE html> 
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -41,22 +41,20 @@
             contenedorGráficas = document.getElementById("contenedorGráficas");
             cargando = document.getElementById("cargando");
             mensajeError = document.getElementById("mensajeError");
+            btAceptar = document.getElementById("btAceptar");
+            btAceptar.addEventListener("click", controladorDeBotones);
             inputNumber = document.getElementById("campoNumérico");
             cabecera = document.getElementById("cabecera");
-            tablaTiempo = document.getElementById("tablaTiempo");
-            tablaTiempo.style.width = 100 + "%";
-            tablaTiempo.style.height = 100 + "%";
-
             /*Array de meses*/
             meses = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sept", "Oct", "Nov", "Dic"];
 
             /*Estilos del divContenedor*/
-            contentTablaTiempo = document.getElementById("contentTablaTiempo");
-            contentTablaTiempo.style.width = 95 + "%";
-            contentTablaTiempo.style.height = 35 + "%";
-            contentTablaTiempo.style.position = "relative";
-            contentTablaTiempo.style.top = 10 + "px";
-            contentTablaTiempo.style.margin = 10 + "px auto";
+            tablaTiempo = document.getElementById("tablaTiempo");
+            tablaTiempo.style.position = "relative";
+            tablaTiempo.style.top = 10 + "px";
+            tablaTiempo.style.width = 95 + "%";
+            tablaTiempo.style.height = 35 + "%";
+            tablaTiempo.style.margin = 10 + "px auto";
             
             /*Se le da el onclick a todos los botones y se le da estilos*/
             for (var i = 0; i < todosBotones.length; i++) {
@@ -77,7 +75,8 @@
             contPag = document.getElementById("contenedorPaginacion");
             contPag.style.position = "relative";
             contPag.style.left = 10 + "%";
-            contPag.style.top = 10 + "px";
+            contPag.style.top = 2 + "%";
+            contPag.style.width = 70 + "%";
 
             /*GIF cargando*/
             cargando.style.position = "absolute";
@@ -85,24 +84,13 @@
             cargando.style.height = 20 + "%";
             cargando.style.left = 45 + "%";
             cargando.style.top = 45 + "%";
+            cargando.style.visibility = "visible";
  
             /*Mensaje de error que se activa cuando no ha habido un problema*/
             mensajeError.style.position = "absolute";
             mensajeError.style.marginLeft = 20 + "px";
             mensajeError.style.display = "none";
             mensajeError.style.color = "#ff0000";
-
-            /*Barra de progreso que se activa cuando se clickea en el botón 4semanas,6meses o años*/
-            contbarraProgreso = document.getElementById("contbarraProgreso");
-            contbarraProgreso.style.position = "absolute";
-            contbarraProgreso.style.left = 32 + "%";
-            contbarraProgreso.style.width = 40 + "%";
-            contbarraProgreso.style.height = 10 + "%";
-            contbarraProgreso.style.top = 25 + "%";
-            contbarraProgreso.style.visibility = "hidden";
-            barraProgreso = document.getElementById("barraProgreso");
-            barraProgreso.style.width = 80 + "%";
-            barraProgreso.style.height = 30 + "%";
 
             reiniciarVariables();
             arrayHumedad = new Array();
@@ -113,25 +101,177 @@
             /*Inicialización de variables y booleanos*/
             contadorAux = -1;
             seguir = true;
-            cancelar = false;
             contador = 0;
-            contadorParticular = 0;
             ultimoMes = 0;
             ultimaHora = 0;
             ultimoAño = 0;
-            totalPáginas = 94; 
-			numPágina.innerHTML = 1;
+            final = false;
+            totalPaginas = 90;
+            tratarFecha();
+            actualizarSelects();
+            numPágina.innerHTML = 1;
 
             /*Valor máximo que permitirá el inputNumber será el número de páginas del JSON*/
-            inputNumber.setAttribute("max", totalPáginas);
+			inputNumber.setAttribute("max", totalPaginas);
             inputNumber.style.width = "3%";
             inputNumber.setAttribute("value",1);
 
             visibilidadContenedores("hidden");
-            verOcultarBotones("hidden");
-            mostrar(contador, "paginación");
-            spanTotalPágina.innerHTML = " / " + totalPáginas;
+            verOcultarElementos("hidden");
+            mostrar(contador,"paginación");
+            spanTotalPágina.innerHTML = " / " + totalPaginas;
             setTimeout(function(){ordenarTabla()}, 5000);
+        }
+        function tratarFecha() {
+            var fechaActualizacion = '2018-5-20';
+            var fechAct = new Date(fechaActualizacion).getTime();
+            var fechFin = new Date(fechaActual()).getTime();
+
+            var diasDif = (fechFin - fechAct) / (1000 * 60 * 60 * 24);
+            numPaginas = Math.trunc(diasDif / 4);
+            totalPaginas = numPaginas + totalPaginas;
+        }
+        function fechaActual() {
+            var fechaSistema = new Date();
+            return fechaSistema.getFullYear() + "-" + (fechaSistema.getMonth() + 1) + "-" + fechaSistema.getDate();
+        }
+
+        function actualizarSelects() {
+            listaMeses = document.getElementById("listarMeses");
+            listarDias = document.getElementById("listarDias");
+            btEnviar = document.getElementById("btEnviar");
+            var fecha = new Date();
+            dia = fecha.getDate();
+            mes = fecha.getMonth();
+            año = fecha.getYear();
+            for (var i = 1; i < meses.length; i++) {
+                var opcion = document.createElement("option");
+                if (i < 10) {
+                    opcion.value = "0" + i;
+                } else {
+                    opcion.value = i;
+                }
+                opcion.innerHTML = meses[i];
+                listaMeses.appendChild(opcion);
+            }
+            listaMeses.selectedIndex = mes;
+            for (var i = 1; i <= 31; i++) {
+                var opcion = document.createElement("option");
+                if (i < 10) {
+                    opcion.value = "0" + i;
+                }
+                opcion.innerHTML = i;
+                listarDias.appendChild(opcion);
+            }
+            listarDias.selectedIndex = (dia - 1);
+        }
+        function valoresFecha() {
+            return listarAnos[listarAnos.selectedIndex].value + "-" + listaMeses[listaMeses.selectedIndex].value + "-" + listarDias[listarDias.selectedIndex].value;
+        }
+        function pedirRecibirDatos(bt) { 
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {//Respuesta del servidor OK
+                    var respuesta = this.responseText;
+                    elementos = respuesta.split(";");//Quita el ; del final del array
+
+                    if (elementos[0] == "") {
+                        document.getElementById("infoDia").innerHTML = "NO EXISTE";
+                    }else if(elementos.length < 145){
+                        document.getElementById("infoDia").innerHTML = "Día incompleto";  
+                    }
+                    else {
+                        eliminarTrTabla();
+                        if (bt == "24Horas") {
+                            document.getElementById("infoDia").innerHTML = "";
+                        }
+                        for (var i = 0; i < (elementos.length - 1) && seguir ; i++) {
+                            var valor = elementos[i].split("=");
+
+                            ultimaFecha = valor[0];
+
+                            filaTabla(i, valor[0], valor[1], valor[2], valor[3], valor[4], valor[5], valor[6]);
+
+                            if (i == (elementos.length - 2)) {
+                                final = true;
+                            }
+                            tratamiento(queHaré(bt), valor[3], valor[5], valor[1]);
+                            
+                        }
+                        if (!seguir) {
+                            actualizarGráficas();
+                        }
+                    }
+                    cargando.style.visibility = "hidden";
+                    verOcultarElementos("visible");
+                }
+            };
+            var parametros = "?boton=" + bt + "&fecha=" + valoresFecha();
+            request.open("GET", "./php/consultas.php" + parametros, true);
+            request.send();
+            
+        }
+        function actualizarGráficas() {
+            visibilidadContenedores("visible");
+            eliminarGráfica("barrasHumedad");
+            eliminarGráfica("barrasViento");
+            eliminarGráfica("lineas");
+
+            verOcultarElementos("visible");
+            cargando.style.visibility = "hidden";
+
+            /*Se vuelven a crear las gráficas pasándole el array de datos correspondiente*/
+            pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad);
+            pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
+            pintarGráficaLineal(arrayFechas, arrayTempAt);
+
+            actualizarTableSorter();
+        }
+        function filaTabla(vuelta, fecha_hora, temp, presion, hum, vientoDir, vientoVel, lluvia) {
+            fecha = sacarFecha(fecha_hora);
+            hora = sacarHora(fecha_hora);
+            
+            /*Se escoge el mes y año vigente*/
+            mesActual = sacarMes(fecha_hora.substring(5, 7));
+            añoActual = fecha_hora.substring(0, 4);
+
+            if (vuelta == 0) {
+                ultimaHora = sacarHora(fecha_hora).substring(0, 5);
+                ultimoMes = sacarMes(fecha_hora.substring(5, 7));
+                ultimoAño = fecha_hora.substring(0, 4);
+            }
+            if (vuelta < 25) {
+                var tr = document.createElement("tr");
+                vuelta++;
+
+                crearTD(vuelta, tr, "#005ae2", "white");
+                if (vuelta % 2 == 0) {
+                    color = "white";
+                } else {
+                    color = "#f2f2f2";
+                }
+                crearTD(sacarDíaSemana(fecha_hora.substring(0, 10)) + " " + fecha + " * " + hora, tr, color, "black");
+                crearTD(temp, tr, color, "black");
+                crearTD(presion, tr, color, "black");
+                crearTD(hum, tr, color, "black");
+
+                /*Se crea el div que contiene la brújula y la dirección del viente en grados*/
+                divDirViento = document.createElement("div");
+                valorGrados = document.createElement("span");
+                textSpan = document.createTextNode(vientoDir);
+                valorGrados.appendChild(textSpan);
+                seleccionarBrújula(vientoDir);
+                divDirViento.appendChild(seleccionarBrújula());
+                divDirViento.appendChild(valorGrados);
+                crearTD(divDirViento, tr, color, "black");
+
+                crearTD(vientoVel, tr, color, "black");
+                crearTD(lluvia, tr, color, "black");
+
+                /*Se añaden los anteriores TD a la tabla*/
+                document.getElementById("contenidoTabla").appendChild(tr);
+            }
+            
         }
         function ordenarTabla(){
             $(document).ready(function() 
@@ -179,8 +319,7 @@
             /*Reinicio de variables*/
             reiniciarValores();
             seguir = true;
-            cancelar = false;
-            contadorParticular = 0;
+            final = false;
             ultimaHora = 0;
             ultimoMes = 0;
             ultimoAño = 0;
@@ -188,72 +327,73 @@
 			
 			actualizarBotonesPaginacion();
             /*Los botones se ocultan para que se puede clicar ninguno mientras se cargan los datos*/
-			verOcultarBotones("hidden");
+			verOcultarElementos("hidden");
 			
             switch (evento.target.id) {
                 case "Enviar":
                     if(validacionInputNumerico()){/*Si el valor del inputNumber es correcto.*/ 
                         contador = (parseInt(inputNumber.value) - 1);
-                        intruccionBoton(contador,"Enviar");
+                        intruccionBoton("Enviar");
                     }
                     break;
 
                 case "24Horas":
-                    intruccionBoton(0,"24Horas");
+                    intruccionBoton("24Horas");
                     break;
                     
                 case "6Horas":
-                    intruccionBoton(0,"6Horas");
+                    intruccionBoton("6Horas");
                     break; 
 
                 case "4Semanas":
-                    intruccionBoton(contadorParticular,"4Semanas");
+                    pedirRecibirDatos("4Semanas");
+                    claseBotonSeleccionado("4Semanas");
                     break;
 
                 case "6Meses":
-                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
+                    var r = confirm("El proceso va a durar varios segundos. ¿Desea continuar?");
                     if (r == true) { /*Aceptar*/
-                         intruccionBoton(contadorParticular,"6Meses");
+                        pedirRecibirDatos("6Meses");
+                        claseBotonSeleccionado("6Meses");
                     } else {/*Cancelar*/
                         cargando.style.visibility = "hidden";
-                        verOcultarBotones("visible");
+                        verOcultarElementos("visible");
                     }
                     break;
 
                 case "anos":
                     var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
                     if (r == true) {/*Aceptar*/
-                        intruccionBoton(contadorParticular,"anos");
+                        pedirRecibirDatos("anos");
+                        claseBotonSeleccionado("anos");
                     } else {/*Cancelar*/
                         cargando.style.visibility = "hidden";
-                        verOcultarBotones("visible");
+                        verOcultarElementos("visible");
                     }
                     break; 
 
-                /*Si se cancela el proceso, se cambiar el boolean a true para que pare de leer*/      
-                case "Cancelar":
-                    cancelar = true;
-                    break;
-
                 case "btAnterior": 
                     contador--;
-                    intruccionBoton(contador,"btAnterior");
+                    intruccionBoton("btAnterior");
                     break;
 
                 case "btSiguiente":
                     contador++;
-                    intruccionBoton(contador,"btSiguiente");
+                    intruccionBoton("btSiguiente");
                     break;
 
                 case "btRetroceder5":
                     contador = contador - 5;
-                    intruccionBoton(contador,"btRetroceder5");
+                    intruccionBoton("btRetroceder5");
                     break;
 
                 case "btAvanzar5":
                     contador = contador + 5;
-                    intruccionBoton(contador,"btAvanzar5");
-                    break; 
+                    intruccionBoton("btAvanzar5");
+                    break;
+                case "btAceptar":
+                    pedirRecibirDatos("24Horas");
+                    break;
             }
             /*Puede que el valor de la página haya sufrido alguna modificación por eso se actualiza*/
 			numPágina.innerHTML = "";
@@ -261,20 +401,20 @@
             numPágina.innerHTML = (parseInt(aux)+1);
         }
         /*Ambos contenedores de botones se hacen hidden mientras se van cargando los datos y una vez finalizado el proceso se vuelven a mostrar*/
-        function verOcultarBotones(visibilidad) {
+        function verOcultarElementos(visibilidad) {
             contPag.style.visibility = visibilidad;
             control.style.visibility = visibilidad;
+            cabecera.style.visibility = visibilidad;
         }
-        function intruccionBoton(pagina,boton){
+        function intruccionBoton(boton){
             eliminarTrTabla();
             actualizarBotonesPaginacion();
-            if(boton == "btAnterior" || boton == "btSiguiente" || boton == "btRetroceder5" || boton == "btAvanzar5" || boton == "Enviar"){
-                mostrar(contador, "paginación");
-            }else{
-                mostrar(contadorParticular, boton);
+            if (boton == "Enviar" || boton == "btAnterior" || boton == "btAvanzar5" || boton == "btSiguiente" || boton == "btRetroceder5") {
+                mostrar(contador,"paginación");
+            } else {
+                mostrar(0,boton);
                 claseBotonSeleccionado(boton);
             }
-            cabecera.style.visibility = "hidden";
         }
 		/*Si se clica en el botón enviar, se leer el valor que tiene el inputNumber y se actualiza el valor del contador
         y con ello el estado de los botones de la paginación. */
@@ -285,38 +425,32 @@
             if (contador == 0) {
                 claseBotonSeleccionado("btAnterior");
             }
-            if (contador == (totalPáginas - 1)) {
+            if (contador == (totalPaginas - 1)) {
                 claseBotonSeleccionado("btSiguiente");
             }
             if((contador - 5) < 0) {
                 claseBotonSeleccionado("btRetroceder5");
             }
-            if ((contador + 5) >= totalPáginas) {
+            if ((contador + 5) >= totalPaginas) {
                 claseBotonSeleccionado("btAvanzar5");
             }
 		}
 		
         function validacionInputNumerico() {
-            if(inputNumber.value >= 1 && inputNumber.value <= totalPáginas){/*Se encuenta en el rango correcto*/
+            if (inputNumber.value >= 1 && inputNumber.value <= totalPaginas) {/*Se encuenta en el rango correcto*/
                 return true;
             }
             /*Si el valor no es correcto*/
-            verOcultarBotones("visible");
+            verOcultarElementos("visible");
             cargando.style.visibility = "hidden";
             return false;
         }
         /*Método principal*/
-        function mostrar(pagina, condicion) {
+        function mostrar(pagina,condicion) {
             if (window.XMLHttpRequest) { peticion_htpp = new XMLHttpRequest(); } else if (window.ActiveXObject) { peticion_http = new ActiveXObject("Microsoft.XMLHTTP"); }
             peticion_htpp.onreadystatechange = muestraContenido;
             peticion_htpp.open("GET", prepararURL(pagina), true);
             peticion_htpp.send(null);
-            final = false;/*booleano que cambia a true cuando llega al final de la página*/
-
-            /*Si la condición es una de las siguiente se activa la barra de progreso para orientar al usuario de como va el proceso.*/
-            if (condicion == "4Semanas" || condicion == "6Meses" || condicion == "anos") {
-                contbarraProgreso.style.visibility = "visible";
-            }
 
             function muestraContenido() {
                 if (peticion_htpp.readyState == 4 && peticion_htpp.status == 200) {
@@ -329,53 +463,12 @@
                     objeto_json = eval("(" + respuesta_json + ")");
 
                     for (var i = 0; i < objeto_json.items.length && seguir; i++) {/*Seguirá hasta que acabe la página o que ya no se quiera seguir*/
-                        fecha = sacarFecha(objeto_json.items[i].reading_timestamp);
-                        hora = sacarHora(objeto_json.items[i].reading_timestamp);
 
-                        /*Se escoge el mes y año vigente*/
-                        mesActual = sacarMes(objeto_json.items[i].reading_timestamp.substring(5, 7));
-                        añoActual = objeto_json.items[i].reading_timestamp.substring(0, 4);
-                        if (i <= 4) {/*Solo se quieren sacar por cada página los 5 primeros valores.*/
-                            var tr = document.createElement("tr");
-                            valor = i;
-                            valor++;
-                            /*Esta valor está preparado por si se lee más de una página (5 * contadorParticular) + valor) */
-                            crearTD((5 * contadorParticular) + valor, tr, "#005ae2", "white");
-                            if (i % 2 == 0) {
-                                color = "white";
-                            } else {
-                                color = "#f2f2f2";
-                            }
-
-                            crearTD(sacarDíaSemana(objeto_json.items[i].reading_timestamp.substring(0, 10)) + " " + fecha + " * " + hora, tr, color, "black");
-                            crearTD(objeto_json.items[i].ambient_temp, tr, color, "black");
-                            crearTD(objeto_json.items[i].air_pressure, tr, color, "black");
-                            crearTD(objeto_json.items[i].humidity, tr, color, "black");
-
-                            /*Se crea el div que contiene la brújula y la dirección del viente en grados*/
-                            divDirViento = document.createElement("div");
-                            valorGrados = document.createElement("span");
-                            textSpan = document.createTextNode(objeto_json.items[i].wind_direction);
-                            valorGrados.appendChild(textSpan);
-                            seleccionarBrújula(objeto_json.items[i].wind_direction);
-                            divDirViento.appendChild(seleccionarBrújula());
-                            divDirViento.appendChild(valorGrados);
-                            crearTD(divDirViento, tr, color, "black");
-
-                            crearTD(objeto_json.items[i].wind_speed, tr, color, "black");
-                            crearTD(objeto_json.items[i].rainfall, tr, color, "black");
-
-                            /*Se añaden los anteriores TD a la tabla*/
-                            document.getElementById("contenidoTabla").appendChild(tr);
-                        }
-
-                        /*Me quedo con la última hora, el mes y el año*/
-                        if (pagina == 0) {
-                            ultimaHora = sacarHora(objeto_json.items[0].reading_timestamp).substring(0, 5);
-                            ultimoMes = sacarMes(objeto_json.items[0].reading_timestamp.substring(5, 7));
-                            ultimoAño = objeto_json.items[0].reading_timestamp.substring(0, 4);
-                        }
-
+                        filaTabla(i, objeto_json.items[i].reading_timestamp, objeto_json.items[i].ambient_temp,
+                            objeto_json.items[i].air_pressure, objeto_json.items[i].humidity, objeto_json.items[i].wind_direction,
+                            objeto_json.items[i].wind_speed,objeto_json.items[i].rainfall);
+         
+                        ultimaFecha = objeto_json.items[0].reading_timestamp;
                         /*booleano que cambia a true cuando es último elemento de la página*/
                         if (i == objeto_json.items.length - 1) {
                             final = true;
@@ -384,45 +477,14 @@
                     }
                     contenedorGráficas.style.position = "relative";
 
-                    if (cancelar) {/*Si se le da a cancelar*/
-                        contbarraProgreso.style.visibility = "hidden";
-                        barraProgreso.value = 0;/*Se lleva a 0 a la barra de progreso*/
-                        verOcultarBotones("visible");
-                        cargando.style.visibility = "hidden";
-                        actualizarTableSorter();
-                        cabecera.style.visibility = "visible";
-                        seguir = false;/*rompe el bucle for*/
-                    }
-                    if (seguir) { /*Si seguir es true y a terminado de leer esa página llamará nuevamente el método mostrar*/
-                        contadorParticular++;
-                        barraProgreso.value = (contadorParticular * progreso(condicion));
-                        mostrar(contadorParticular, condicion);
-                    }
-
                 } else{
                     /*mensajeError.style.display = "block";
                     visibilidadContenedores("hidden");
                     cargando.style.visibility = "hidden";*/
                 }
-                /*Si no se ha dado cancelar y ha terminado de consultar los datos de acuerdo a la condición que ha entrado en el método mostrar*/ 
-                if (!cancelar && !seguir) {
-                    /*Elimina las gráficas*/
-                    eliminarGráfica("barrasHumedad");
-                    eliminarGráfica("barrasViento");
-                    eliminarGráfica("lineas");
-
-                    verOcultarBotones("visible");
-                    cargando.style.visibility = "hidden";
-                    barraProgreso.value = 0;
-                    contbarraProgreso.style.visibility = "hidden";
-
-                    /*Se vuelven a crear las gráficas pasándole el array de datos correspondiente*/
-                    pintarGráficaBarrasHumedad(arrayFechas, arrayHumedad);
-                    pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
-                    pintarGráficaLineal(arrayFechas, arrayTempAt);
-
-                    actualizarTableSorter();
-                    cabecera.style.visibility = "visible";
+                /*Si se ha terminado de consultar los datos de acuerdo a la condición que ha entrado en el método mostrar*/ 
+                if (!seguir) {
+                    actualizarGráficas();
                 }
             }
         }
@@ -435,11 +497,11 @@
                 case "paginación":
                     return paginar();
                     break;
-                case "4Semanas":
-                    return cuatroSemanas();
-                    break;
                 case "24Horas":
                     return venticuatroHoras();
+                    break;
+                case "4Semanas":
+                    return cuatroSemanas();
                     break;
                 case "6Meses":
                     return seisMeses();
@@ -497,6 +559,41 @@
             return brujulaImg;
         }
 
+        function eliminarGráfica(id) {
+            document.getElementById(id).parentNode.removeChild(document.getElementById(id));
+        }
+
+        function crearGráfica(padre,id,width,heigth) {
+            var canvas = document.createElement("canvas");
+            canvas.setAttribute("id", id);
+            canvas.setAttribute("width", width);
+            canvas.setAttribute("height", heigth);
+            document.getElementById(padre).appendChild(canvas);
+            return canvas.getContext("2d");
+        }
+
+        function tratamiento(booleano, valorHumedad, valorVelocidadViento, valorTempAt) {    
+            if (booleano) {
+                frecuencia++;//Cuenta la cantidad de elementos
+                humedad += parseInt(valorHumedad);
+                tempAt += parseInt(valorTempAt);
+                velocidadViento += parseInt(valorVelocidadViento);
+            } else { 
+                /*Introduce el valor, con solo dos cifras significativas luego de la coma, a el array correspondiente*/
+                arrayHumedad.push((humedad / frecuencia).toFixed(2));
+                arrayTempAt.push((tempAt / frecuencia).toFixed(2));
+                arrayRachasVientos.push((velocidadViento / frecuencia).toFixed(2));
+                reiniciarVariables();
+            }
+        }
+
+        function reiniciarVariables() {
+            humedad = 0;
+            velocidadViento = 0;
+            tempAt = 0;
+            frecuencia = 0;
+        }
+
         function cuatroSemanas() {
             var horaActual = hora.substring(0, 5);
             if (ultimaHora == horaActual) {
@@ -525,7 +622,7 @@
                     seguir = false;
                 }
                 return false;
-            } 
+            }
             else {
                 return true;
             }
@@ -535,51 +632,17 @@
             if (ultimoAño == añoActual && arrayFechas.length == 0) {
                 arrayFechas.push(añoActual);
                 return true;
-            }else if(arrayFechas.indexOf(añoActual) == -1){
+            } else if (arrayFechas.indexOf(añoActual) == -1) {
                 arrayFechas.push(añoActual);
                 return false;
-            } else if (contadorParticular == totalPáginas && final) {
+            } else if (final) {
                 seguir = false;
                 return false;
             } else {
                 return true;
             }
         }
-        
-        function eliminarGráfica(id) {
-            document.getElementById(id).parentNode.removeChild(document.getElementById(id));
-        }
 
-        function crearGráfica(padre,id,width,heigth) {
-            var canvas = document.createElement("canvas");
-            canvas.setAttribute("id", id);
-            canvas.setAttribute("width", width);
-            canvas.setAttribute("height", heigth);
-            document.getElementById(padre).appendChild(canvas);
-            return canvas.getContext("2d");
-        }
-
-        function tratamiento(booleano, valorHumedad, valorVelocidadViento, valorTempAt) {    
-            if (booleano) {
-                frecuencia++;//Cuenta la cantidad de elementos
-                humedad += valorHumedad;
-                tempAt += valorTempAt;
-                velocidadViento += valorVelocidadViento;
-            } else { 
-                /*Introduce el valor, con solo dos cifras significativas luego de la coma, a el array correspondiente*/
-                arrayHumedad.push((humedad / frecuencia).toFixed(2));
-                arrayTempAt.push((tempAt / frecuencia).toFixed(2));
-                arrayRachasVientos.push((velocidadViento / frecuencia).toFixed(2));
-                reiniciarVariables();
-            }
-        }
-
-        function reiniciarVariables() {
-            humedad = 0;
-            velocidadViento = 0;
-            tempAt = 0;
-            frecuencia = 0;
-        }
 
         function paginar() {
             if (arrayFechas.length == 0) {/*Caso de que el array esté vacio se coloca la primera fecha de la página*/
@@ -616,7 +679,7 @@
         }
         function venticuatroHoras() {
             var minutoActual = hora.substring(3, 5);
-            if (sacarHora(objeto_json.items[0].reading_timestamp).substring(3, 5) == minutoActual) {
+            if (sacarHora(ultimaFecha).substring(3, 5) == minutoActual) {
                 contadorAux++;
                 if (contadorAux % 6 == 0 && contadorAux != 0) {
                     arrayFechas.push(contadorAux + "h");
@@ -655,25 +718,10 @@
             contadorAux = -1;
         }
 
-        /*Cada condición tiene su propio avance*/
-        function progreso(condicion){
-            switch (condicion) {
-                case "4Semanas":
-                    return (100 / 9);
-                    break;
-                case "6Meses":
-                    return (100 / 34);
-                    break;
-                case "anos":
-                    return(100 / totalPáginas);
-                    break;
-            }
-        }
-
         function crearTD(valor, tr,colorFondo,colorLetra) {
             var td = document.createElement("td");
             td.style.textAlign = "center";
-            td.style.fontSize = 20 + "px";
+            td.style.fontSize = 1.2 + "em";
            
            /*Caso especial: si es el div contenedor de la brújula y los grados del viento*/
             if (valor == "[object HTMLDivElement]") {
@@ -789,39 +837,41 @@
         <button id="btAnterior" disabled="disabled"> Anterior</button>
         <button id="btSiguiente">Siguiente</button>
         <button id="btAvanzar5">Avanzar5</button>
-        <span style="position:relative;left:2%;font-weight:bold;"> Página: <span id="numPágina"></span> <span id="spanTotalPágina"></span></span>
-        <div style="display:inline;position:relative;left:50px">
+        <span style="position:relative;left:4%;font-weight:bold;"> Página: <span id="numPágina"></span> <span id="spanTotalPágina"></span></span>
+        <div style="display:inline;position:relative;left:5%">
             <span>Escoja la página: </span>
             <input type="number" id="campoNumérico" min="1" required minlength="1" maxlength="2" validate />
             <button id="Enviar">Enviar</button>
         </div>
-        
+        <div style="display:inline;position:relative;left:9%">
+            <select id="listarDias"></select>
+            <select id="listarMeses"></select>
+            <select id="listarAnos">
+                <option>2017</option>
+                <option selected="selected">2018</option>
+            </select>
+            <button id="btAceptar">Aceptar</button>
+            <p id="infoDia" style="display:inline;position:relative;left:2%;font-weight:bold"></p>
+        </div>
     </div>
-    <div id="contentTablaTiempo">
-        <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
-            <thead>
-                <tr id="cabecera" style="background-color:#005ae2;color:white">
-                    <th>Pos</th>
-                    <th>Fecha*Hora</th>
-                    <th>Temp At</th>
-                    <th>Pre. At</th>
-                    <th>Humedad</th>
-                    <th>Dir. Viento</th>
-                    <th>Vel. Viento</th>
-                    <th>Lluvia</th>
-                </tr>
-            </thead>
-            <tbody id="contenidoTabla"></tbody>
-        </table>
-    </div>
-    
+  
+    <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
+        <thead > 
+            <tr id="cabecera" style="background-color:#005ae2;color:white">
+                <th>Pos</th>
+                <th>Fecha*Hora</th>
+                <th>Temp At</th>
+                <th>Pre. At</th>
+                <th>Humedad</th>
+                <th>Dir. Viento</th>
+                <th>Vel. Viento</th>
+                <th>Lluvia</th>
+            </tr>
+       </thead>
+        <tbody id="contenidoTabla"></tbody>
+    </table>
 
     <img id="cargando" src="imagen/cargando.gif" />
 
-    <div id="contbarraProgreso">
-        <progress id="barraProgreso" value="0" max="100"></progress>
-        <button id="Cancelar">Cancelar</button>
-    </div>
 </body>
 </html>
-
