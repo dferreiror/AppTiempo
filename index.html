@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html> 
+<!DOCTYPE html> 
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -351,25 +351,15 @@
                     break;
 
                 case "6Meses":
-                    var r = confirm("El proceso va a durar varios segundos. ¿Desea continuar?");
-                    if (r == true) { /*Aceptar*/
-                        pedirRecibirDatos("6Meses");
-                        claseBotonSeleccionado("6Meses");
-                    } else {/*Cancelar*/
-                        cargando.style.visibility = "hidden";
-                        verOcultarElementos("visible");
-                    }
+                    pedirRecibirDatos("6Meses");
+                    claseBotonSeleccionado("6Meses");
+                   
                     break;
 
                 case "anos":
-                    var r = confirm("El proceso puede durar varios minutos. ¿Desea continuar?");
-                    if (r == true) {/*Aceptar*/
-                        pedirRecibirDatos("anos");
-                        claseBotonSeleccionado("anos");
-                    } else {/*Cancelar*/
-                        cargando.style.visibility = "hidden";
-                        verOcultarElementos("visible");
-                    }
+                    pedirRecibirDatos("anos");
+                    claseBotonSeleccionado("anos");
+
                     break; 
 
                 case "btAnterior": 
