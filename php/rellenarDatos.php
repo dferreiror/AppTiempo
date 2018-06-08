@@ -29,11 +29,8 @@
 
 				$query = "INSERT INTO tiempo
 				(fecha_hora,temperatura,presion,humedad,viento_dir,viento_vel,lluvia)
-				VALUES
-			 ('$fecha','$temperatura','$presion','$humedad','$viento_dir','$viento_vel','$lluvia')";
-				if(!mysqli_query($conexion,$query)) { 
-					die('Error : Query Not Executed. Please Fix the Issue! ' . mysql_error());
-				} else{ 
+				VALUES ('$fecha','$temperatura','$presion','$humedad','$viento_dir','$viento_vel','$lluvia')";
+				if(mysqli_query($conexion,$query)){  
 					echo "Fila inserta!!!";
 				}
 			}
