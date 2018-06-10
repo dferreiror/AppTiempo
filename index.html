@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html> 
+<!DOCTYPE html> 
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -77,8 +77,8 @@
 
             /*GIF cargando*/
             cargando.style.position = "absolute";
-            cargando.style.width = 15 + "%";
-            cargando.style.height = 20 + "%";
+            cargando.style.width = 10 + "%";
+            cargando.style.height = 10 + "%";
             cargando.style.left = 45 + "%";
             cargando.style.top = 45 + "%";
             cargando.style.visibility = "visible";
@@ -96,7 +96,7 @@
             seguir = true;
             contador = 0;
             final = false;
-            totalPaginas = 90;
+            totalPaginas = 94;
             tratarFecha();
             actualizarSelects();
             numPágina.innerHTML = 1;
@@ -169,7 +169,7 @@
         /*Toma la fecha de actualización y si es menor que la del sistema realiza la diferencia de días y la 
         divide entre 4  y el resultado se lo suma a total de páginas.*/
         function tratarFecha() { 
-            var fechaActualizacion = '2018-5-20';
+            var fechaActualizacion = '2018-6-10';
             var fechAct = new Date(fechaActualizacion).getTime();
             var fechFin = new Date(fechaActual()).getTime();
 
@@ -383,13 +383,14 @@
                         }
                         tratamiento(queHaré(condicion), objeto_json.items[i].humidity, objeto_json.items[i].wind_speed, objeto_json.items[i].ambient_temp);
                     }
-                    contenedorGráficas.style.position = "relative";
 
-                } else {
-                    /*mensajeError.style.display = "block";
+                } else if (peticion_htpp.status == 0 && peticion_htpp.readyState == 4) {
+                    mensajeError.style.display = "block";
+                    mensajeError.innerHTML = "No tiene INTERNET o el SERVIDOR no responde. Inténtelo más tarde!!!"
                     visibilidadContenedores("hidden");
-                    cargando.style.visibility = "hidden";*/
+                    cargando.style.visibility = "hidden";   
                 }
+
                 /*Si se ha terminado de consultar los datos de acuerdo a la condición que ha entrado en el método mostrar*/
                 if (!seguir) {
                     actualizarGráficas();
@@ -680,7 +681,7 @@
                     return seisHoras();
                     break;
                 case "24Horas":
-                    return venticuatroHoras();
+                    return veinticuatroHoras();
                     break;
                 case "4Semanas":
                     return cuatroSemanas();
@@ -728,7 +729,7 @@
             }
         }
 
-        function venticuatroHoras() {
+        function veinticuatroHoras() {
             var minutoActual = hora.substring(3, 5);
             if (sacarHora(ultimaFecha).substring(3, 5) == minutoActual) {
                 contadorAux++;
@@ -796,7 +797,7 @@
     </script>
 </head>
 <body>
-    <h1 id="mensajeError">Estamos teniendo problemas con el servidor. Lo sentimos!!!</h1>
+    <h1 id="mensajeError"></h1>
     <table id="contenedorGráficas">
         <tr>
             <td colspan="3"><h1 id="titulo">Estadística del TIEMPO</h1></td>
@@ -845,7 +846,7 @@
         </div>
     </div>
   
-    <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="10" class="tablesorter">
+    <table id="tablaTiempo" border="1" CELLSPACING="0" CELLPADDING="5" class="tablesorter">
         <thead > 
             <tr id="cabecera" style="background-color:#005ae2;color:white">
                 <th>Pos</th>
