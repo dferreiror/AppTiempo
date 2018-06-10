@@ -52,7 +52,7 @@
             tablaTiempo = document.getElementById("tablaTiempo");
             tablaTiempo.style.position = "relative";
             tablaTiempo.style.top = 10 + "px";
-            tablaTiempo.style.width = 100 + "%";
+            tablaTiempo.style.width = 95 + "%";
             tablaTiempo.style.margin = 0 + "% auto";
             
             /*Se le da el onclick a todos los botones y se le da estilos*/
@@ -110,7 +110,7 @@
             verOcultarElementos("hidden");
             mostrar(contador,"paginación");
             spanTotalPágina.innerHTML = " / " + totalPaginas;
-            setTimeout(function(){ordenarTabla()}, 5000);
+            setTimeout(function () { ordenarTabla() }, 5000);
         }
         function reiniciarVariables() {
             humedad = 0;
@@ -545,7 +545,7 @@
 
                 ]
             }
-            window.myBar = new Chart(crearGráfica("contBarrasHumedad", "barrasHumedad", 400, 300)).Bar(barChartData);
+            window.myBar = new Chart(crearGráfica("contBarrasHumedad", "barrasHumedad", anchoGráfica, altoGráfica)).Bar(barChartData);
         }
         function pintarGráficaBarrasViento(arrayFechas, arrayVelocidadVientos) {
             var barChartData = {
@@ -561,7 +561,7 @@
 
                 ]
             }
-            window.myBar = new Chart(crearGráfica("contBarrasVientos", "barrasViento", 400, 300)).Bar(barChartData);
+            window.myBar = new Chart(crearGráfica("contBarrasVientos", "barrasViento", anchoGráfica, altoGráfica)).Bar(barChartData);
         }
 
         function pintarGráficaLineal(arrayFechas, arrayTempAt) {
@@ -579,7 +579,7 @@
                     }
                 ]
             }
-            window.myLine = new Chart(crearGráfica("contLineas", "lineas", 450, 250)).Line(lineChartData);
+            window.myLine = new Chart(crearGráfica("contLineas", "lineas", anchoGráfica, altoGráfica)).Line(lineChartData);
         }
 
 
@@ -597,6 +597,9 @@
             eliminarGráfica("barrasViento");
             eliminarGráfica("lineas");
 
+            anchoGráfica = (window.innerWidth / 3.5);
+            altoGráfica =   (window.innerHeight / 2.5);
+
             verOcultarElementos("visible");
             cargando.style.visibility = "hidden";
 
@@ -605,7 +608,6 @@
             pintarGráficaBarrasViento(arrayFechas, arrayRachasVientos);
             pintarGráficaLineal(arrayFechas, arrayTempAt);
 
-            tablaTiempo.style.width = 100 + "%";
             actualizarTableSorter();
         }
 
