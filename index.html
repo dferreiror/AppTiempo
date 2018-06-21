@@ -102,7 +102,7 @@
             numPágina.innerHTML = 1;
 
             /*Valor máximo que permitirá el inputNumber será el número de páginas del JSON*/
-			inputNumber.setAttribute("max", totalPaginas);
+	    inputNumber.setAttribute("max", totalPaginas);
             inputNumber.style.width = "4%";
             inputNumber.setAttribute("value",1);
 
@@ -176,7 +176,7 @@
             if (fechFin > fechAct) { //Si la fecha de sistema es mayor que la fecha de actualización
                 var diasDif = (fechFin - fechAct) / (1000 * 60 * 60 * 24);
                 var numPaginas = Math.trunc(diasDif / 4); 
-                totalPaginas = numPaginas + totalPaginas;
+                totalPaginas = (numPaginas + totalPaginas);
             }
         }
 
