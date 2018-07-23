@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html> 
+﻿﻿<!DOCTYPE html> 
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -96,20 +96,20 @@
             seguir = true;
             contador = 0;
             final = false;
-            totalPaginas = 90;
-            tratarFecha();
+            totalPaginas = 94;
+            paginasTotales(totalPaginas);
             actualizarSelects();
             numPágina.innerHTML = 1;
 
             /*Valor máximo que permitirá el inputNumber será el número de páginas del JSON*/
-	    inputNumber.setAttribute("max", totalPaginas);
             inputNumber.style.width = "4%";
             inputNumber.setAttribute("value",1);
 
             visibilidadContenedores("hidden");
             verOcultarElementos("hidden");
             mostrar(contador,"paginación");
-            spanTotalPágina.innerHTML = " / " + totalPaginas;
+
+            introducirDatos();
             setTimeout(function () { ordenarTabla() }, 5000);
         }
         function reiniciarVariables() {
@@ -131,6 +131,10 @@
             $(document).ready(function () {
                 $("#tablaTiempo").tablesorter({ sortList: [[0, 0]] });
             });
+        }
+        function paginasTotales(total){
+            inputNumber.setAttribute("max", total);
+            spanTotalPágina.innerHTML = " / " + total;
         }
 
         function actualizarSelects() {//Actualiza los select con la fecha del sistema 
@@ -160,24 +164,6 @@
                 listarDias.appendChild(opcion);
             }
             listarDias.selectedIndex = (fecha.getDate() - 1);
-        }
-
-        function fechaActual() {//FORMATO QUE RETORNA: 2018-05-31
-            var fechaSistema = new Date();
-            return fechaSistema.getFullYear() + "-" + (fechaSistema.getMonth() + 1) + "-" + fechaSistema.getDate();
-        }
-        /*Toma la fecha de actualización y si es menor que la del sistema realiza la diferencia de días y la 
-        divide entre 4  y el resultado se lo suma a total de páginas.*/
-        function tratarFecha() { 
-            var fechaActualizacion = '2018-7-13';
-            var fechAct = new Date(fechaActualizacion).getTime();
-            var fechFin = new Date(fechaActual()).getTime();
-
-            if (fechFin > fechAct) { //Si la fecha de sistema es mayor que la fecha de actualización
-                var diasDif = (fechFin - fechAct) / (1000 * 60 * 60 * 24);
-                var numPaginas = Math.trunc(diasDif / 4); 
-                totalPaginas = (numPaginas + totalPaginas);
-            }
         }
 
         /*Este método recibe como parámetros la visibidad (hidden o visible)*/
@@ -651,8 +637,19 @@
                     verOcultarElementos("visible");
                 }
             };
-            var parametros = "?boton=" + bt + "&fecha=" + valoresFecha();
-            request.open("GET", "./php/consultas.php" + parametros, true);
+            var parametros = "?boton=" + bt + "&fecha=" + valoresFecha() + "&operacion=consulta";
+            request.open("GET", "./php/ejecutarApp.php" + parametros, true);
+            request.send();
+        }
+        function introducirDatos() {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {//Respuesta del servidor OK
+                    var respuesta = this.responseText;
+                    paginasTotales(respuesta);
+                }
+            };
+            request.open("GET", "./php/ejecutarApp.php?operacion=crearInsertar", true);
             request.send();
         }
 
